@@ -72,11 +72,9 @@ public sealed class SynapseClient : IDisposable, INonBlockingSocket<EndPoint>
     }
 
 
-    public async Task<ulong> CreateRoomAsync(CancellationToken ct = default)
+    public async Task CreateRoomAsync(CancellationToken ct = default)
     {
         await ConnectWsAsync(new Uri(_baseHttpWs, $"/create_room?client_id={ClientIdDecimal}"), ct).ConfigureAwait(false);
-        ulong room = await WaitForRoomIdAsync(ct).ConfigureAwait(false);
-        return room;
     }
 
     public async Task JoinRoomAsync(ulong roomId, CancellationToken ct = default)
@@ -264,18 +262,6 @@ public sealed class SynapseClient : IDisposable, INonBlockingSocket<EndPoint>
                 }
         }
     }
-
-    private async Task<ulong> WaitForRoomIdAsync(CancellationToken ct)
-    {
-        // Simple polling wait; you can replace with TaskCompletionSource if you prefer.
-        while (!ct.IsCancellationRequested)
-        {
-            if (_roomId.HasValue) return _roomId.Value;
-            await Task.Delay(10, ct).ConfigureAwait(false);
-        }
-        throw new OperationCanceledException();
-    }
-
 
     private async Task UdpPunchLoop(int sendIntervalMs, CancellationToken ct)
     {

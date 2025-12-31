@@ -1,4 +1,5 @@
 using System;
+using MemoryPack;
 
 namespace Netcode.Rollback.Network
 {
@@ -34,8 +35,8 @@ namespace Netcode.Rollback.Network
         public ushort Magic;
     }
 
-    [Serializable]
-    public struct MessageBody
+    [MemoryPackable]
+    public partial struct MessageBody
     {
         [Serializable]
         public struct SyncRequest
@@ -158,7 +159,8 @@ namespace Netcode.Rollback.Network
             Kind == MessageKind.ChecksumReport ? _checksumReport : throw new InvalidOperationException("body type mismatch");
     }
 
-    public struct Message
+    [MemoryPackable]
+    public partial struct Message
     {
         public MessageHeader Header;
         public MessageBody Body;

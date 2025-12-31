@@ -31,21 +31,22 @@ public class GameManager : MonoBehaviour
     private GameState _curState;
     private P2PSession<GameState, Input, EndPoint> _session;
     private SynapseClient _synapse;
-    private int _handle;
-    private int _opponentHandle;
-    private bool _playing;
+    private volatile int _handle;
+    private volatile int _opponentHandle;
+    private volatile bool _playing;
 
     async void Awake()
     {
         _synapse = new SynapseClient(ServerIp, HttpPort, PunchPort, RelayPort);
+        _playing = false;
+        _handle = -1;
+        _opponentHandle = -1;
 
         _synapse.OnYouAre += h => Debug.Log($"My handle: {h}");
         _synapse.OnPeerFound += ep => Debug.Log($"Peer found: {ep}");
         _synapse.OnPeerJoined += h => Debug.Log($"Peer joined {h}");
         _synapse.OnPeerLeft += h => Debug.Log($"Peer left {h}");
         _synapse.OnRoomCreated += room => Debug.Log($"Room: {room}");
-
-        ulong room = await _synapse.CreateRoomAsync();
 
         _synapse.OnPeerJoined += h =>
         {
@@ -56,21 +57,20 @@ public class GameManager : MonoBehaviour
         {
             _opponentHandle = -1;
             _synapse.StopUdp();
+            _playing = false;
         };
         _synapse.OnYouAre += h => _handle = (int)h;
         _synapse.OnPeerFound += ep =>
         {
-            Assert.IsTrue(_handle != -1 && _opponentHandle != -1, "peer found but both handles not found");
             _curState = GameState.New();
             SessionBuilder<Input, EndPoint> builder = new SessionBuilder<Input, EndPoint>().WithNumPlayers(2).WithFps(50);
             builder.AddPlayer(new PlayerType<EndPoint> { Kind = PlayerKind.Local, Address = null }, new PlayerHandle(_handle));
             builder.AddPlayer(new PlayerType<EndPoint> { Kind = PlayerKind.Remote, Address = ep }, new PlayerHandle(_opponentHandle));
-            _session = builder.StartP2PSession<GameState>(UdpSocket.BindToPort(0));
+            _session = builder.StartP2PSession<GameState>(_synapse);
+            _playing = true;
         };
 
-        _playing = false;
-        _handle = -1;
-        _opponentHandle = -1;
+        await _synapse.CreateRoomAsync();
     }
 
     async void OnDestroy()
