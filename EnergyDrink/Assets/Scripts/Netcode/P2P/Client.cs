@@ -24,31 +24,40 @@ namespace Netcode.P2P
         Disposed,
     }
 
-    public enum WsEventKind
+    public enum InWsEventKind
     {
         JoinedRoom = 1,
         YouAre = 2,
         PeerJoined = 3,
         PeerLeft = 4,
+        StartedGame = 5,
     }
 
-    public readonly struct WsEvent
+    public enum OutWsEventKind
     {
-        public readonly WsEventKind Kind;
+        StartGame = 1,
+    }
+
+    public readonly struct InWsEvent
+    {
+        public readonly InWsEventKind Kind;
         public readonly ulong RoomId;
         public readonly uint Handle;
+        public readonly EndPoint Endpoint;
 
-        private WsEvent(WsEventKind type, ulong roomId, uint handle)
+        private InWsEvent(InWsEventKind type, ulong roomId, uint handle, EndPoint endPoint)
         {
             Kind = type;
             RoomId = roomId;
             Handle = handle;
+            Endpoint = endPoint;
         }
 
-        public static WsEvent JoinedRoom(ulong roomId) => new WsEvent(WsEventKind.JoinedRoom, roomId, 0);
-        public static WsEvent YouAre(uint handle) => new WsEvent(WsEventKind.YouAre, 0, handle);
-        public static WsEvent PeerJoined(uint handle) => new WsEvent(WsEventKind.PeerJoined, 0, handle);
-        public static WsEvent PeerLeft(uint handle) => new WsEvent(WsEventKind.PeerLeft, 0, handle);
+        public static InWsEvent JoinedRoom(ulong roomId) => new InWsEvent(InWsEventKind.JoinedRoom, roomId, 0, null);
+        public static InWsEvent YouAre(uint handle) => new InWsEvent(InWsEventKind.YouAre, 0, handle, null);
+        public static InWsEvent PeerJoined(uint handle) => new InWsEvent(InWsEventKind.PeerJoined, 0, handle, null);
+        public static InWsEvent PeerLeft(uint handle) => new InWsEvent(InWsEventKind.PeerLeft, 0, handle, null);
+        public static InWsEvent GameStarted(EndPoint endpoint) => new InWsEvent(InWsEventKind.StartedGame, 0, 0, endpoint);
     }
 
     public sealed class SynapseClient : IDisposable, INonBlockingSocket<EndPoint>
@@ -124,6 +133,24 @@ namespace Netcode.P2P
 
         #region Matchmaking
 
+        public async Task StartGame(CancellationToken ct = default)
+        {
+            EnsureState(ClientState.MatchmakingReady);
+
+            if (_ws == null)
+                throw new InvalidOperationException("WebSocket is not connected.");
+            if (_ws.State != WebSocketState.Open)
+                throw new InvalidOperationException($"WebSocket is not open (state = {_ws.State}).");
+
+            byte[] payload = { (byte)OutWsEventKind.StartGame };
+            await _ws.SendAsync(
+                new ArraySegment<byte>(payload),
+                WebSocketMessageType.Binary,
+                endOfMessage: true,
+                cancellationToken: ct
+            );
+        }
+
         public async Task CreateRoomAsync(CancellationToken ct = default)
         {
             EnsureState(ClientState.Initialized);
@@ -173,9 +200,9 @@ namespace Netcode.P2P
             await _ws.ConnectAsync(wsUri, _wsCts.Token);
         }
 
-        public List<WsEvent> PumpWebSocket()
+        public async Task<List<InWsEvent>> PumpWebSocket()
         {
-            var events = new List<WsEvent>(8);
+            var events = new List<InWsEvent>(8);
 
             if (State == ClientState.Disposed) return events;
 
@@ -212,51 +239,57 @@ namespace Netcode.P2P
             if (!res.EndOfMessage)
                 throw new InvalidOperationException("WS message fragmented; implement reassembly.");
 
-            TryHandleWsBinaryToEvents(_wsBuf, res.Count, events);
+            await TryHandleWsBinaryToEvents(_wsBuf, res.Count, events);
             return events;
         }
 
-        private bool TryHandleWsBinaryToEvents(byte[] data, int n, List<WsEvent> outEvents)
+        private async Task<bool> TryHandleWsBinaryToEvents(byte[] data, int n, List<InWsEvent> outEvents)
         {
             if (n < 1) return false;
 
             byte tag = data[0];
             switch (tag)
             {
-                case (int)WsEventKind.JoinedRoom:
+                case (int)InWsEventKind.JoinedRoom:
                     if (n < 1 + 8) return false;
                     {
                         ulong room = ReadU64BE(data, 1);
                         State = ClientState.Matchmaking;
-                        outEvents.Add(WsEvent.JoinedRoom(room));
+                        outEvents.Add(InWsEvent.JoinedRoom(room));
                         return true;
                     }
 
-                case (int)WsEventKind.YouAre:
+                case (int)InWsEventKind.YouAre:
                     if (n < 1 + 4) return false;
                     {
                         uint handle = ReadU32BE(data, 1);
-                        outEvents.Add(WsEvent.YouAre(handle));
+                        outEvents.Add(InWsEvent.YouAre(handle));
                         return true;
                     }
 
-                case (int)WsEventKind.PeerJoined:
+                case (int)InWsEventKind.PeerJoined:
                     if (n < 1 + 4) return false;
                     {
                         uint h = ReadU32BE(data, 1);
                         EnsureState(ClientState.Matchmaking);
                         State = ClientState.MatchmakingReady;
-                        outEvents.Add(WsEvent.PeerJoined(h));
+                        outEvents.Add(InWsEvent.PeerJoined(h));
                         return true;
                     }
 
-                case (int)WsEventKind.PeerLeft:
+                case (int)InWsEventKind.PeerLeft:
                     if (n < 1 + 4) return false;
                     {
                         uint h = ReadU32BE(data, 1);
                         if (State == ClientState.MatchmakingReady)
                             State = ClientState.Matchmaking;
-                        outEvents.Add(WsEvent.PeerLeft(h));
+                        outEvents.Add(InWsEvent.PeerLeft(h));
+                        return true;
+                    }
+                case (int)InWsEventKind.StartedGame:
+                    {
+                        EndPoint ep = await ConnectAsync();
+                        outEvents.Add(InWsEvent.GameStarted(ep));
                         return true;
                     }
 
@@ -305,7 +338,7 @@ namespace Netcode.P2P
             {
                 Debug.Log("[Connect] Attempting to punchthrough...");
                 State = ClientState.AttemptPunchthrough;
-                var ep = await TryPunch(peerEp, ct);
+                var ep = await TryPunch(peerEp, TimeSpan.FromSeconds(10), ct);
                 State = ClientState.Connected;
                 Debug.Log("[Connect] Connected using punchthrough");
                 return ep;
@@ -402,9 +435,9 @@ namespace Netcode.P2P
             throw new NotImplementedException("Not implemented yet");
         }
 
-        private async Task<IPEndPoint> TryPunch(IPEndPoint peer, CancellationToken ct)
+        private async Task<IPEndPoint> TryPunch(IPEndPoint peer, TimeSpan timeout, CancellationToken ct)
         {
-            throw new NotImplementedException("Not implemented yet");
+            return await UdpPunch.PunchAsync(_udp, peer, timeout, ct);
         }
 
         #endregion

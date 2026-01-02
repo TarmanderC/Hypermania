@@ -102,47 +102,77 @@ struct Args {
 fn bind_addr(port: u16) -> SocketAddr {
     SocketAddr::from(([0, 0, 0, 0], port))
 }
+#[repr(u8)]
+enum InWsEventType {
+    StartGame = 1,
+}
+
+enum InWsEvent {
+    StartGame,
+}
+
+impl InWsEvent {
+    fn decode(msg: &Message) -> Option<Self> {
+        let Message::Binary(b) = msg else {
+            return None;
+        };
+        if b.is_empty() {
+            return None;
+        }
+        match b[0] {
+            x if x == InWsEventType::StartGame as u8 => Some(InWsEvent::StartGame),
+            _ => None,
+        }
+    }
+}
 
 #[repr(u8)]
-enum WsEventType {
+enum OutWsEventType {
     JoinedRoom = 1,
     YouAre = 2,
     PeerJoined = 3,
     PeerLeft = 4,
+    StartedGame = 5,
 }
 
-enum WsEvent {
+enum OutWsEvent {
     JoinedRoom(RoomId),
     YouAre(Handle),
     PeerJoined(Handle),
     PeerLeft(Handle),
+    StartedGame,
 }
 
-impl WsEvent {
+impl OutWsEvent {
     fn encode(&self) -> Vec<u8> {
         match *self {
-            WsEvent::JoinedRoom(room_id) => {
+            OutWsEvent::JoinedRoom(room_id) => {
                 let mut out = Vec::with_capacity(1 + 8);
-                out.push(WsEventType::JoinedRoom as u8);
+                out.push(OutWsEventType::JoinedRoom as u8);
                 out.extend_from_slice(&room_id.to_be_bytes());
                 out
             }
-            WsEvent::YouAre(handle) => {
+            OutWsEvent::YouAre(handle) => {
                 let mut out = Vec::with_capacity(1 + 4);
-                out.push(WsEventType::YouAre as u8);
+                out.push(OutWsEventType::YouAre as u8);
                 out.extend_from_slice(&handle.to_be_bytes());
                 out
             }
-            WsEvent::PeerJoined(handle) => {
+            OutWsEvent::PeerJoined(handle) => {
                 let mut out = Vec::with_capacity(1 + 4);
-                out.push(WsEventType::PeerJoined as u8);
+                out.push(OutWsEventType::PeerJoined as u8);
                 out.extend_from_slice(&handle.to_be_bytes());
                 out
             }
-            WsEvent::PeerLeft(handle) => {
+            OutWsEvent::PeerLeft(handle) => {
                 let mut out = Vec::with_capacity(1 + 4);
-                out.push(WsEventType::PeerLeft as u8);
+                out.push(OutWsEventType::PeerLeft as u8);
                 out.extend_from_slice(&handle.to_be_bytes());
+                out
+            }
+            OutWsEvent::StartedGame => {
+                let mut out = Vec::with_capacity(1);
+                out.push(OutWsEventType::StartedGame as u8);
                 out
             }
         }
@@ -304,18 +334,18 @@ async fn client_ws_loop(
     });
 
     let rs = st.room_state.read().await;
-    rs.send_to(client_id, WsEvent::JoinedRoom(room_id).into_message());
-    rs.send_to(client_id, WsEvent::YouAre(handle as u32).into_message());
+    rs.send_to(client_id, OutWsEvent::JoinedRoom(room_id).into_message());
+    rs.send_to(client_id, OutWsEvent::YouAre(handle as u32).into_message());
 
     if handle != 0 {
         // if we are not host, notify ourself that there is a host and the host that we have joined
-        rs.send_to(client_id, WsEvent::PeerJoined(0).into_message());
+        rs.send_to(client_id, OutWsEvent::PeerJoined(0).into_message());
         rs.send_to(
             rs.rooms
                 .get(&room_id)
                 .expect("to join a room it must exist")
                 .host,
-            WsEvent::PeerJoined(1).into_message(),
+            OutWsEvent::PeerJoined(1).into_message(),
         );
     }
 
@@ -324,7 +354,22 @@ async fn client_ws_loop(
     while let Some(item) = ws_rx.next().await {
         match item {
             Ok(Message::Close(_)) => break,
-            Ok(_) => {}
+            Ok(msg) => {
+                if let Some(evt) = InWsEvent::decode(&msg) {
+                    match evt {
+                        InWsEvent::StartGame => {
+                            // broadcast StartedGame to everyone in the room
+                            let rs = st.room_state.read().await;
+                            if let Some(room) = rs.rooms.get(&room_id) {
+                                if let Some(guest) = room.client {
+                                    rs.send_to(guest, OutWsEvent::StartedGame.into_message());
+                                    rs.send_to(room.host, OutWsEvent::StartedGame.into_message());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             Err(_) => break,
         }
     }
@@ -357,7 +402,7 @@ async fn leave_room_on_disconnect(st: &AppState, client_id: ClientId) {
     if room.client.is_some_and(|id| id == client_id) {
         // guest left -> notify host
         let host = room.host;
-        notify.push((host, WsEvent::PeerLeft(1).into_message()));
+        notify.push((host, OutWsEvent::PeerLeft(1).into_message()));
         room.client = None;
     } else {
         // host left
@@ -373,8 +418,8 @@ async fn leave_room_on_disconnect(st: &AppState, client_id: ClientId) {
                 // transfer host -> peer, notify new host
                 room.host = peer;
                 room.client = None;
-                notify.push((peer, WsEvent::PeerLeft(0).into_message()));
-                notify.push((peer, WsEvent::YouAre(0).into_message()));
+                notify.push((peer, OutWsEvent::PeerLeft(0).into_message()));
+                notify.push((peer, OutWsEvent::YouAre(0).into_message()));
             }
             None => {
                 state.rooms.remove(&cur_room);

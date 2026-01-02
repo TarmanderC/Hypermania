@@ -67,26 +67,39 @@ public class GameManager : MonoBehaviour
 
     void NetworkingLoop()
     {
-        List<WsEvent> events = _synapse.PumpWebSocket();
-        foreach (WsEvent ev in events)
+        List<InWsEvent> events = _synapse.PumpWebSocket();
+        foreach (InWsEvent ev in events)
         {
             switch (ev.Kind)
             {
-                case WsEventKind.JoinedRoom:
+                case InWsEventKind.JoinedRoom:
                     _roomId = ev.RoomId;
                     Debug.Log($"[Matchmaking] Joined room {ev.RoomId}");
                     break;
-                case WsEventKind.PeerLeft:
+                case InWsEventKind.PeerLeft:
                     _opponentHandle = null;
                     Debug.Log($"[Matchmaking] Peer {ev.Handle} left");
                     break;
-                case WsEventKind.PeerJoined:
+                case InWsEventKind.PeerJoined:
                     _opponentHandle = (int)ev.Handle;
                     Debug.Log($"[Matchmaking] Peer {ev.Handle} joined");
                     break;
-                case WsEventKind.YouAre:
+                case InWsEventKind.YouAre:
                     _handle = (int)ev.Handle;
                     Debug.Log($"[Matchmaking] You are {ev.Handle}");
+                    break;
+                case InWsEventKind.StartedGame:
+
+                    Debug.Log($"[Matchmaking] Started game with handle: {_handle}, opponentHandle: {_opponentHandle}, roomId: {_roomId}");
+                    if (_handle == null || _opponentHandle == null || _roomId == null) return;
+
+                    Debug.Log($"[Matchmaking] Playing with peer {ep}");
+                    _curState = GameState.New();
+                    SessionBuilder<Input, EndPoint> builder = new SessionBuilder<Input, EndPoint>().WithNumPlayers(2).WithFps(50);
+                    builder.AddPlayer(new PlayerType<EndPoint> { Kind = PlayerKind.Local, Address = null }, new PlayerHandle(_handle.Value));
+                    builder.AddPlayer(new PlayerType<EndPoint> { Kind = PlayerKind.Remote, Address = ep }, new PlayerHandle(_opponentHandle.Value));
+                    _session = builder.StartP2PSession<GameState>(_synapse);
+                    _playing = true;
                     break;
             }
         }
@@ -115,17 +128,9 @@ public class GameManager : MonoBehaviour
 
     public async void StartGame()
     {
-        Debug.Log($"[Matchmaking] Starting game with handle: {_handle}, opponentHandle: {_opponentHandle}, roomId: {_roomId}");
         if (_handle == null || _opponentHandle == null || _roomId == null) return;
-
-        EndPoint ep = await _synapse.ConnectAsync();
-        Debug.Log($"[Matchmaking] Playing with peer {ep}");
-        _curState = GameState.New();
-        SessionBuilder<Input, EndPoint> builder = new SessionBuilder<Input, EndPoint>().WithNumPlayers(2).WithFps(50);
-        builder.AddPlayer(new PlayerType<EndPoint> { Kind = PlayerKind.Local, Address = null }, new PlayerHandle(_handle.Value));
-        builder.AddPlayer(new PlayerType<EndPoint> { Kind = PlayerKind.Remote, Address = ep }, new PlayerHandle(_opponentHandle.Value));
-        _session = builder.StartP2PSession<GameState>(_synapse);
-        _playing = true;
+        Debug.Log($"[Matchmaking] Starting game...");
+        await _synapse.StartGame();
     }
 
     void GameLoop()

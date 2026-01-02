@@ -5,31 +5,13 @@ using UnityEngine.Assertions;
 
 namespace Netcode.Rollback.Network
 {
-    /// <summary>
-    /// Input compression utilities.
-    ///
-    /// NOTE:
-    /// This class is NOT thread-safe.
-    /// It uses a shared static scratch buffer to avoid allocations.
-    /// Callers must ensure Encode / Decode are not invoked concurrently.
-    /// </summary>
-    public static class Compression
+    public class Compression
     {
         private const int MAX_SCRATCH_BYTES = 256 * 1024;
 
-        // Shared scratch buffer used by both encoding and decoding.
-        // NOT thread-safe.
-        private static readonly byte[] _scratch = new byte[MAX_SCRATCH_BYTES];
+        private readonly byte[] _scratch = new byte[MAX_SCRATCH_BYTES];
 
-        /// <summary>
-        /// Encodes pending inputs by XOR-delta against refInput, then run-length encodes the delta stream.
-        ///
-        /// RLE format:
-        ///   (count, value) byte pairs, where count is in the range [1, 255].
-        ///
-        /// NOT thread-safe.
-        /// </summary>
-        public static byte[] Encode(in InputBytes refInput, IEnumerable<InputBytes> pendingInput)
+        public byte[] Encode(in InputBytes refInput, IEnumerable<InputBytes> pendingInput)
         {
             if (pendingInput == null) throw new ArgumentNullException(nameof(pendingInput));
             Assert.AreNotEqual(refInput.Bytes.Length, 0, "reference input cannot be empty");
@@ -95,12 +77,7 @@ namespace Netcode.Rollback.Network
             return res;
         }
 
-        /// <summary>
-        /// Decodes run-length encoded delta data, then XORs against refInput to reconstruct inputs.
-        ///
-        /// NOT thread-safe.
-        /// </summary>
-        public static byte[][] Decode(in InputBytes refInput, ReadOnlySpan<byte> data)
+        public byte[][] Decode(in InputBytes refInput, ReadOnlySpan<byte> data)
         {
             Assert.AreNotEqual(refInput.Bytes.Length, 0, "reference input cannot be empty");
 
@@ -131,17 +108,7 @@ namespace Netcode.Rollback.Network
             return res;
         }
 
-        /// <summary>
-        /// Expands RLE data into the shared scratch buffer.
-        ///
-        /// Input format:
-        ///   (count, value) byte pairs.
-        ///
-        /// Returns the number of expanded bytes written.
-        ///
-        /// NOT thread-safe.
-        /// </summary>
-        private static int RleDecodeToScratch(ReadOnlySpan<byte> rle)
+        private int RleDecodeToScratch(ReadOnlySpan<byte> rle)
         {
             Assert.AreEqual(rle.Length % 2, 0, "RLE data length must be even (count,value pairs)");
 

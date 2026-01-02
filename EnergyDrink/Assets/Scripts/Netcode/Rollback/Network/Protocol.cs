@@ -145,8 +145,10 @@ namespace Netcode.Rollback.Network
         private DesyncDetection _desyncDetection;
         public Dictionary<Frame, ulong> PendingChecksums => _pendingChecksums;
 
-        // cached random
-        System.Random random;
+        // cached 
+        private System.Random _random;
+        private Compression _compression;
+
 
         public UdpProtocol(
             ReadOnlySpan<PlayerHandle> handles,
@@ -158,10 +160,10 @@ namespace Netcode.Rollback.Network
             TimeSpan disconnectNotifyStart,
             uint fps, DesyncDetection desyncDetection)
         {
-            random = new System.Random();
+            _random = new System.Random();
             ushort magic = 0;
             while (magic == 0)
-                magic = (ushort)random.Next(ushort.MaxValue + 1);
+                magic = (ushort)_random.Next(ushort.MaxValue + 1);
 
             _handles = new PlayerHandle[handles.Length];
             handles.CopyTo(_handles);
@@ -367,7 +369,7 @@ namespace Netcode.Rollback.Network
             Assert.IsTrue(_lastAckedInput.Frame == Frame.NullFrame || _lastAckedInput.Frame + 1 == input.Frame);
 
             body.StartFrame = input.Frame;
-            body.Bytes = Compression.Encode(_lastAckedInput, _pendingOutput.Iter());
+            body.Bytes = _compression.Encode(_lastAckedInput, _pendingOutput.Iter());
 
             int totalBytes = 0;
             foreach (InputBytes bytes in _pendingOutput.Iter()) { totalBytes += bytes.Bytes.Length; }
@@ -397,7 +399,7 @@ namespace Netcode.Rollback.Network
         private void SendSyncRequest()
         {
             Span<byte> nmbBytes = stackalloc byte[4];
-            random.NextBytes(nmbBytes);
+            _random.NextBytes(nmbBytes);
             uint randomNumber = BinaryPrimitives.ReadUInt32BigEndian(nmbBytes);
             _syncRandomRequests.Add(randomNumber);
             MessageBody.SyncRequest body = new MessageBody.SyncRequest { RandomRequest = randomNumber };
@@ -530,7 +532,7 @@ namespace Netcode.Rollback.Network
             if (_recvInputs.TryGetValue(decodeFrame, out InputBytes decodeInp))
             {
                 _runningLastInputRecv = Instant.Now();
-                byte[][] recvInputs = Compression.Decode(decodeInp, body.Bytes);
+                byte[][] recvInputs = _compression.Decode(decodeInp, body.Bytes);
 
                 for (int i = 0; i < recvInputs.GetLength(0); i++)
                 {

@@ -1,0 +1,127 @@
+name: Build GameNetworkingSockets
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "gns-v*"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-x86_64
+            os: ubuntu-latest
+            platform: linux
+            arch: x86_64
+
+          - name: windows-x86_64
+            os: windows-latest
+            platform: windows
+            arch: x86_64
+
+          # macOS Intel runner
+          - name: macos-x86_64
+            os: macos-13
+            platform: mac
+            arch: x86_64
+
+          # macOS Apple Silicon runner
+          - name: macos-arm64
+            os: macos-14
+            platform: mac
+            arch: arm64
+
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      # ---------- Dependencies ----------
+      - name: Install deps (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build pkg-config libssl-dev
+
+      - name: Install deps (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew update
+          brew install cmake ninja openssl || true
+          echo "OPENSSL_ROOT_DIR=$(brew --prefix openssl)" >> $GITHUB_ENV
+
+      - name: MSVC Dev Cmd (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      # ---------- Configure & Build ----------
+      - name: Configure (CMake)
+        shell: bash
+        run: |
+          set -euo pipefail
+          GNS_DIR="Submodules/GameNetworkingSockets"
+          BUILD_DIR="$GNS_DIR/build/gh-${{ matrix.name }}"
+          mkdir -p "$BUILD_DIR"
+
+          EXTRA_ARGS=""
+          if [[ "${{ matrix.platform }}" == "mac" ]]; then
+            # Ensure we build for the runner’s architecture.
+            EXTRA_ARGS="-DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch }}"
+          fi
+
+          cmake -S "$GNS_DIR" -B "$BUILD_DIR" -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DUSE_STEAMWEBRTC=ON \
+            ${OPENSSL_ROOT_DIR:+-DOPENSSL_ROOT_DIR="$OPENSSL_ROOT_DIR"} \
+            $EXTRA_ARGS
+
+      - name: Build
+        shell: bash
+        run: |
+          set -euo pipefail
+          GNS_DIR="Submodules/GameNetworkingSockets"
+          BUILD_DIR="$GNS_DIR/build/gh-${{ matrix.name }}"
+          cmake --build "$BUILD_DIR" --config Release --parallel
+
+      # ---------- Collect artifacts ----------
+      - name: Collect native libraries
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="dist/${{ matrix.name }}"
+          mkdir -p "$OUT"
+
+          GNS_DIR="Submodules/GameNetworkingSockets"
+          BUILD_DIR="$GNS_DIR/build/gh-${{ matrix.name }}"
+
+          if [[ "${{ matrix.platform }}" == "windows" ]]; then
+            find "$BUILD_DIR" -type f \( -name "GameNetworkingSockets.dll" -o -name "GameNetworkingSockets.lib" -o -name "GameNetworkingSockets.pdb" \) \
+              -print -exec cp -f {} "$OUT/" \;
+          elif [[ "${{ matrix.platform }}" == "linux" ]]; then
+            find "$BUILD_DIR" -type f -name "libGameNetworkingSockets.so" \
+              -print -exec cp -f {} "$OUT/" \;
+          elif [[ "${{ matrix.platform }}" == "mac" ]]; then
+            find "$BUILD_DIR" -type f \( -name "libGameNetworkingSockets.dylib" -o -name "libGameNetworkingSockets.bundle" \) \
+              -print -exec cp -f {} "$OUT/" \;
+          fi
+
+          echo "Collected:"
+          ls -la "$OUT"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: GameNetworkingSockets-${{ matrix.name }}-USE_STEAMWEBRTC-ON
+          path: dist/${{ matrix.name }}/
+          if-no-files-found: error
+
