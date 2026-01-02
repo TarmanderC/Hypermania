@@ -7,6 +7,8 @@ namespace Netcode.Rollback.Sessions
     public static class SessionConstants
     {
         public const int MAX_EVENT_QUEUE_SIZE = 100;
+        public const int MAX_NUM_PLAYERS = 16;
+        public const int MAX_INPUT_PAYLOAD = 400;
     }
     public class SessionBuilder<TInput, TAddress>
         where TInput : struct, IInput<TInput>
@@ -102,6 +104,10 @@ namespace Netcode.Rollback.Sessions
 
         public SessionBuilder<TInput, TAddress> WithNumPlayers(int numPlayers)
         {
+            if (numPlayers < 0 || numPlayers > SessionConstants.MAX_NUM_PLAYERS)
+            {
+                throw new InvalidOperationException($"num players {numPlayers} is not in [0, MAX_NUM_PLAYERS]");
+            }
             _numPlayers = numPlayers;
             return this;
         }

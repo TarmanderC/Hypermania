@@ -7,22 +7,21 @@ public struct Input : IInput<Input>
     public InputFlags Flags;
     public readonly bool Equals(Input other) { return Flags == other.Flags; }
 
-    public int Size() { return sizeof(int); }
-
-    public void Serialize(Span<byte> outBytes)
+    public int Deserialize(ReadOnlySpan<byte> inBytes)
     {
-        if (outBytes.Length < Size())
-            throw new ArgumentException("Output buffer too small", nameof(outBytes));
+        Flags = (InputFlags)BinaryPrimitives.ReadInt32LittleEndian(inBytes);
+        return sizeof(int);
+    }
+    public int Serialize(Span<byte> outBytes)
+    {
         BinaryPrimitives.WriteInt32LittleEndian(outBytes, (int)Flags);
+        return sizeof(int);
     }
-
-    public Input Deserialize(ReadOnlySpan<byte> inBytes)
-    {
-        if (inBytes.Length < Size())
-            throw new ArgumentException("Input buffer too small", nameof(inBytes));
-        int value = BinaryPrimitives.ReadInt32LittleEndian(inBytes);
-        return new Input((InputFlags)value);
-    }
+    /// <summary>
+    /// Input's serialization size is assumed to be constant regardless of the input's value in the networking code.
+    /// </summary>
+    /// <returns></returns>
+    public int SerdeSize() { return sizeof(int); }
 
     public Input(InputFlags flags) { Flags = flags; }
 }

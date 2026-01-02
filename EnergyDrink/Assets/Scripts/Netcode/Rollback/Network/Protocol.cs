@@ -2,7 +2,6 @@ using System;
 using System.Buffers;
 using System.Buffers.Binary;
 using System.Collections.Generic;
-using MemoryPack;
 using UnityEngine;
 using UnityEngine.Assertions;
 using Utils;
@@ -16,7 +15,7 @@ namespace Netcode.Rollback.Network
 
         public static InputBytes Zeroed<TInput>(int numPlayers) where TInput : IInput<TInput>
         {
-            int size = Serializer<TInput>.Size() * numPlayers;
+            int size = Serializer<TInput>.DefaultSize() * numPlayers;
             return new InputBytes
             {
                 Frame = Frame.NullFrame,
@@ -29,18 +28,18 @@ namespace Netcode.Rollback.Network
             where TInput : IInput<TInput>
         {
             Frame frame = Frame.NullFrame;
-            int size = Serializer<TInput>.Size() * inputs.Count;
+            int size = Serializer<TInput>.DefaultSize() * inputs.Count;
             byte[] buf = new byte[size];
 
             int ptr = 0;
-                foreach((PlayerHandle handle, PlayerInput<TInput> input) in inputs) 
+            foreach ((PlayerHandle handle, PlayerInput<TInput> input) in inputs)
             {
                 if (inputs.TryGetValue(handle, out PlayerInput<TInput> pi))
                 {
                     Assert.IsTrue(frame == Frame.NullFrame || pi.Frame == Frame.NullFrame || frame == pi.Frame);
                     if (pi.Frame != Frame.NullFrame) frame = pi.Frame;
-                    Serializer<TInput>.Serialize(pi.Input, buf.AsSpan().Slice(ptr, Serializer<TInput>.Size()));
-                    ptr += Serializer<TInput>.Size();
+                    pi.Input.Serialize(buf.AsSpan().Slice(ptr, Serializer<TInput>.DefaultSize()));
+                    ptr += Serializer<TInput>.DefaultSize();
                 }
             }
 
@@ -61,7 +60,8 @@ namespace Netcode.Rollback.Network
             {
                 int start = p * size;
                 ReadOnlySpan<byte> slice = Bytes.AsSpan().Slice(start, size);
-                TInput input = MemoryPackSerializer.Deserialize<TInput>(slice);
+                TInput input = default;
+                input.Deserialize(slice);
 
                 res[p] = new PlayerInput<TInput> { Frame = Frame, Input = input };
             }
@@ -78,6 +78,11 @@ namespace Netcode.Rollback.Network
         Shutdown,
     }
 
+    public static class ProtocolConstants
+    {
+        public const int MAX_CHECKSUM_HISTORY_SIZE = 32;
+    }
+
     public class UdpProtocol<TInput, TAddress> where TInput : IInput<TInput>
     {
         const uint NUM_SYNC_PACKETS = 5;
@@ -87,7 +92,6 @@ namespace Netcode.Rollback.Network
         const ulong RUNNING_RETRY_INTERVAL = 200;
         const ulong KEEP_ALIVE_INTERVAL = 200;
         const ulong QUALITY_REPORT_INTERVAL = 200;
-        public const int MAX_CHECKSUM_HISTORY_SIZE = 32;
 
         // configuration / collections
         private int _numPlayers;
@@ -328,14 +332,13 @@ namespace Netcode.Rollback.Network
         {
             if (_state == ProtocolState.Shutdown)
             {
-                Debug.Log($"Protocol is shutting down, dropping {_sendQueue.Count} messages");
+                Debug.Log($"[Rollback] Protocol is shutting down, dropping {_sendQueue.Count} messages");
                 _sendQueue.Clear();
                 return;
             }
 
             if (_sendQueue.Count == 0) { return; }
 
-            Debug.Log($"Sending {_sendQueue.Count} messages over socket");
             while (_sendQueue.Count > 0) { socket.SendTo(_sendQueue.PopFront(), _peerAddr); }
         }
 
@@ -368,7 +371,7 @@ namespace Netcode.Rollback.Network
 
             int totalBytes = 0;
             foreach (InputBytes bytes in _pendingOutput.Iter()) { totalBytes += bytes.Bytes.Length; }
-            // Debug.Log($"Encoded {totalBytes} bytes from {_pendingOutput.Count} pending outputs(s) into {body.Bytes.Length} bytes");
+            // Debug.Log($"[Rollback] Encoded {totalBytes} bytes from {_pendingOutput.Count} pending outputs(s) into {body.Bytes.Length} bytes");
 
             body.AckFrame = _lastRecvFrame;
             body.DisconnectRequested = _state == ProtocolState.Disconnected;
@@ -442,7 +445,7 @@ namespace Netcode.Rollback.Network
                 _eventQueue.PushBack(Event<TInput>.From(new Event<TInput>.NetworkResumed { }));
             }
 
-            Debug.Log($"handling message of kind {msg.Body.Kind}");
+            // Debug.Log($"[Rollback] handling message of kind {msg.Body.Kind}");
             switch (msg.Body.Kind)
             {
                 case MessageKind.SyncRequest:
@@ -585,13 +588,13 @@ namespace Netcode.Rollback.Network
             uint interval = 1;
             if (!_desyncDetection.On)
             {
-                Debug.Log("Received checksum report but desync detection is off, check for consistent configuration");
+                Debug.Log("[Rollback] Received checksum report but desync detection is off, check for consistent configuration");
             }
             else { interval = _desyncDetection.Interval; }
 
-            if (_pendingChecksums.Count >= MAX_CHECKSUM_HISTORY_SIZE)
+            if (_pendingChecksums.Count >= ProtocolConstants.MAX_CHECKSUM_HISTORY_SIZE)
             {
-                Frame oldestFrameToKeep = body.Frame - (MAX_CHECKSUM_HISTORY_SIZE - 1) * (int)interval;
+                Frame oldestFrameToKeep = body.Frame - (ProtocolConstants.MAX_CHECKSUM_HISTORY_SIZE - 1) * (int)interval;
                 List<Frame> toRemove = new List<Frame>();
                 foreach (Frame frame in _pendingChecksums.Keys)
                 {

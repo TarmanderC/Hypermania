@@ -1,13 +1,12 @@
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Globalization;
-using MemoryPack;
 using Netcode.Rollback.Network;
 
 namespace Netcode.Rollback
 {
-    [MemoryPackable]
-    public partial struct Frame : IComparable<Frame>, IEquatable<Frame>, IFormattable
+    public struct Frame : IComparable<Frame>, IEquatable<Frame>, IFormattable, ISerializable
     {
         public int No;
         public static readonly Frame NullFrame = new Frame { No = -1 };
@@ -52,10 +51,22 @@ namespace Netcode.Rollback
         public override string ToString() => No.ToString();
 
         public string ToString(string format, IFormatProvider formatProvider) => No.ToString(format, formatProvider);
+
+        public int Deserialize(ReadOnlySpan<byte> inBytes)
+        {
+            No = BinaryPrimitives.ReadInt32LittleEndian(inBytes);
+            return sizeof(int);
+        }
+        public int Serialize(Span<byte> outBytes)
+        {
+            BinaryPrimitives.WriteInt32LittleEndian(outBytes, No);
+            return sizeof(int);
+        }
+        public int SerdeSize() { return sizeof(int); }
     }
 
 
-    public readonly struct PlayerHandle
+    public readonly struct PlayerHandle : IFormattable
     {
         public readonly int Id;
 
@@ -64,6 +75,9 @@ namespace Netcode.Rollback
             if (id < 0) throw new ArgumentOutOfRangeException("id cannot be neg");
             Id = id;
         }
+
+        public override string ToString() => Id.ToString();
+        public string ToString(string format, IFormatProvider formatProvider) => Id.ToString(format, formatProvider);
     }
 
     public struct DesyncDetection
@@ -257,23 +271,25 @@ namespace Netcode.Rollback
             Kind == RollbackRequestKind.AdvanceFrameReq ? _advanceFrameReq : throw new InvalidOperationException("body type mismatch");
     }
 
-    public interface IInput<TSelf> : IEquatable<TSelf>, ISerializable<TSelf> { }
+    public interface IInput<TSelf> : IEquatable<TSelf>, ISerializable { }
     public interface IState<TSelf> { }
     public interface IAddress<TSelf> { }
 
-    public interface ISerializable<TSelf>
+    public interface ISerializable
     {
-        public abstract int Size();
-        public abstract void Serialize(Span<byte> outBytes);
-        public abstract TSelf Deserialize(ReadOnlySpan<byte> inBytes);
+        public abstract int SerdeSize();
+        public abstract int Serialize(Span<byte> outBytes);
+        public abstract int Deserialize(ReadOnlySpan<byte> inBytes);
+        public void EnsureBufferSize(ReadOnlySpan<byte> buf)
+        {
+            if (buf.Length < SerdeSize()) { throw new ArgumentException("input buffer too small"); }
+        }
     }
 
-    public static class Serializer<T> where T : ISerializable<T>
+    public static class Serializer<T> where T : ISerializable
     {
-        private static T _sample = default;
-        public static int Size() { return _sample.Size(); }
-        public static void Serialize(in T value, Span<byte> outBytes) { value.Serialize(outBytes); }
-        public static T Deserialize(ReadOnlySpan<byte> inBytes) { return _sample.Deserialize(inBytes); }
+        private readonly static T _sample = default;
+        public static int DefaultSize() { return _sample.SerdeSize(); }
     }
 
     public interface INonBlockingSocket<TAddress>

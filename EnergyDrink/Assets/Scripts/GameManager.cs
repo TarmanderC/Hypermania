@@ -21,11 +21,15 @@ public class GameManager : MonoBehaviour
     private P2PSession<GameState, Input, EndPoint> _session;
     private SynapseClient _synapse;
 
+    // matchmaking 
     private int? _handle;
     private int? _opponentHandle;
     private ulong? _roomId;
 
     private bool _playing;
+
+    //rollback
+    private uint _waitRemaining;
 
     void Awake()
     {
@@ -70,19 +74,19 @@ public class GameManager : MonoBehaviour
             {
                 case WsEventKind.JoinedRoom:
                     _roomId = ev.RoomId;
-                    Debug.Log($"Joined room {ev.RoomId}");
+                    Debug.Log($"[Matchmaking] Joined room {ev.RoomId}");
                     break;
                 case WsEventKind.PeerLeft:
                     _opponentHandle = null;
-                    Debug.Log($"Peer {ev.Handle} left");
+                    Debug.Log($"[Matchmaking] Peer {ev.Handle} left");
                     break;
                 case WsEventKind.PeerJoined:
                     _opponentHandle = (int)ev.Handle;
-                    Debug.Log($"Peer {ev.Handle} joined");
+                    Debug.Log($"[Matchmaking] Peer {ev.Handle} joined");
                     break;
                 case WsEventKind.YouAre:
                     _handle = (int)ev.Handle;
-                    Debug.Log($"You are {ev.Handle}");
+                    Debug.Log($"[Matchmaking] You are {ev.Handle}");
                     break;
             }
         }
@@ -90,19 +94,19 @@ public class GameManager : MonoBehaviour
 
     public async void CreateRoom()
     {
-        Debug.Log("creating room...");
+        Debug.Log("[Matchmaking] Creating room...");
         await _synapse.CreateRoomAsync();
     }
 
     public async void JoinRoom(ulong roomId)
     {
-        Debug.Log($"joining room {roomId}...");
+        Debug.Log($"[Matchmaking] Joining room {roomId}...");
         await _synapse.JoinRoomAsync(roomId);
     }
 
     public async void LeaveRoom()
     {
-        Debug.Log($"leaving room...");
+        Debug.Log($"[Matchmaking] Leaving room...");
         await _synapse.LeaveRoomAsync();
         _roomId = null;
         _handle = null;
@@ -111,11 +115,11 @@ public class GameManager : MonoBehaviour
 
     public async void StartGame()
     {
-        Debug.Log($"handle: {_handle}, opponentHandle: {_opponentHandle}, roomId: {_roomId}");
+        Debug.Log($"[Matchmaking] Starting game with handle: {_handle}, opponentHandle: {_opponentHandle}, roomId: {_roomId}");
         if (_handle == null || _opponentHandle == null || _roomId == null) return;
 
         EndPoint ep = await _synapse.ConnectAsync();
-        Debug.Log($"using remote ep {ep}");
+        Debug.Log($"[Matchmaking] Playing with peer {ep}");
         _curState = GameState.New();
         SessionBuilder<Input, EndPoint> builder = new SessionBuilder<Input, EndPoint>().WithNumPlayers(2).WithFps(50);
         builder.AddPlayer(new PlayerType<EndPoint> { Kind = PlayerKind.Local, Address = null }, new PlayerHandle(_handle.Value));
@@ -126,6 +130,12 @@ public class GameManager : MonoBehaviour
 
     void GameLoop()
     {
+        if (_waitRemaining > 0)
+        {
+            Debug.Log("[Game] Skipping frame due to wait recommendation");
+            _waitRemaining--;
+            return;
+        }
         InputFlags[] inputs = new InputFlags[2];
 
         InputFlags f1Input = InputFlags.None;
@@ -150,7 +160,14 @@ public class GameManager : MonoBehaviour
 
         foreach (RollbackEvent<Input, EndPoint> ev in _session.DrainEvents())
         {
-            // Debug.Log($"Event: {ev}");
+            Debug.Log($"[Game] Received {ev.Kind} event");
+            switch (ev.Kind)
+            {
+                case RollbackEventKind.WaitRecommendation:
+                    RollbackEvent<Input, EndPoint>.WaitRecommendation waitRec = ev.GetWaitRecommendation();
+                    _waitRemaining = waitRec.SkipFrames;
+                    break;
+            }
         }
 
         if (_session.CurrentState == SessionState.Running)
@@ -182,7 +199,7 @@ public class GameManager : MonoBehaviour
             }
             catch (Exception e)
             {
-                Debug.Log($"Exception {e}");
+                Debug.Log($"[Game] Exception {e}");
             }
         }
 

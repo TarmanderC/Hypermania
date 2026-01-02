@@ -8,7 +8,7 @@ using Utils;
 
 namespace Netcode.Rollback.Sessions
 {
-    public class PlayerRegisty<TInput, TAddress> 
+    public class PlayerRegisty<TInput, TAddress>
         where TInput : IInput<TInput>
     {
         public Dictionary<PlayerHandle, PlayerType<TAddress>> Handles;
@@ -149,7 +149,7 @@ namespace Netcode.Rollback.Sessions
 
             if (_state != SessionState.Running)
             {
-                Debug.Log("session not synchronized, returning error");
+                Debug.Log("[Rollback] session not synchronized, returning error");
                 throw new InvalidOperationException("session not synchronized");
             }
             foreach (PlayerHandle handle in _playerRegistry.LocalPlayerHandles())
@@ -171,7 +171,7 @@ namespace Netcode.Rollback.Sessions
 
             if (_syncLayer.CurrentFrame == Frame.FirstFrame && !lockstep)
             {
-                Debug.Log("saving state of first frame");
+                Debug.Log("[Rollback] saving state of first frame");
                 requests.Add(_syncLayer.SaveCurrentState());
             }
 
@@ -235,7 +235,7 @@ namespace Netcode.Rollback.Sessions
                     Inputs = inputs
                 }));
             }
-            else { Debug.Log($"prediction threshold reached, skipping on frame {_syncLayer.CurrentFrame}"); }
+            else { Debug.Log($"[Rollback] prediction threshold reached, skipping on frame {_syncLayer.CurrentFrame}"); }
 
             return requests;
         }
@@ -399,7 +399,6 @@ namespace Netcode.Rollback.Sessions
             Assert.IsTrue(frameToLoad <= firstIncorrect);
             int count = currentFrame - frameToLoad;
 
-            // Debug.Log($"Pushing request to load frame {frameToLoad} (current frame {currentFrame})");
             requests.Add(_syncLayer.LoadFrame(frameToLoad));
 
             Assert.IsTrue(_syncLayer.CurrentFrame == frameToLoad);
@@ -629,9 +628,9 @@ namespace Netcode.Rollback.Sessions
                     _localChecksumHistory.Add(frameToSend, (ulong)checkSum);
                 }
 
-                if (_localChecksumHistory.Count > UdpProtocol<TInput, TAddress>.MAX_CHECKSUM_HISTORY_SIZE)
+                if (_localChecksumHistory.Count > ProtocolConstants.MAX_CHECKSUM_HISTORY_SIZE)
                 {
-                    Frame oldestFrameToKeep = frameToSend - (UdpProtocol<TInput, TAddress>.MAX_CHECKSUM_HISTORY_SIZE - 1) * (int)_desyncDetection.Interval;
+                    Frame oldestFrameToKeep = frameToSend - (ProtocolConstants.MAX_CHECKSUM_HISTORY_SIZE - 1) * (int)_desyncDetection.Interval;
                     List<Frame> framesToRemove = new List<Frame>();
                     foreach (Frame frame in _localChecksumHistory.Keys) { if (frame < oldestFrameToKeep) framesToRemove.Add(frame); }
                     foreach (Frame frame in framesToRemove) _localChecksumHistory.Remove(frame);

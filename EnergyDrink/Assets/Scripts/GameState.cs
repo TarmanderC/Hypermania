@@ -1,10 +1,8 @@
 using System.IO.Hashing;
-using MemoryPack;
 using Netcode.Rollback;
 using UnityEngine;
 
-[MemoryPackable]
-public partial struct GameState
+public struct GameState
 {
     public FighterInfo F1Info;
     public FighterInfo F2Info;
@@ -26,7 +24,7 @@ public partial struct GameState
 
     public ulong Checksum()
     {
-        byte[] bytes = MemoryPackSerializer.Serialize(this);
-        return XxHash64.HashToUInt64(bytes);
+        // TODO: fixme
+        return 0;
     }
 }

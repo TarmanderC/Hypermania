@@ -6,7 +6,6 @@ using System.Net.WebSockets;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
-using MemoryPack;
 using Netcode.Rollback;
 using Netcode.Rollback.Network;
 using UnityEngine;
@@ -18,7 +17,6 @@ namespace Netcode.P2P
         Initialized,
         Matchmaking,
         MatchmakingReady,
-        MatchmakingFinished,
         AttemptDirect,
         AttemptUPnP,
         AttemptPunchthrough,
@@ -82,7 +80,7 @@ namespace Netcode.P2P
         private readonly byte[] _wsBuf = new byte[2048];
 
         // udp
-        private readonly UdpClient _udp;
+        private UdpClient _udp;
 
         // state
         public ClientState State { get; private set; }
@@ -121,6 +119,7 @@ namespace Netcode.P2P
 
             try { _udp?.Close(); } catch { }
             try { _udp?.Dispose(); } catch { }
+            _udp = null;
         }
 
         #region Matchmaking
@@ -272,13 +271,51 @@ namespace Netcode.P2P
 
         public async Task<IPEndPoint> ConnectAsync(CancellationToken ct = default)
         {
-            var st = State;
-            if (st != ClientState.Matchmaking && st != ClientState.MatchmakingReady)
-                throw new InvalidOperationException("Client must be matchmaking to start connecting.");
-
+            EnsureState(ClientState.MatchmakingReady);
             var peerEp = await GetPeerEpAsync(ct);
-            State = ClientState.MatchmakingFinished;
+            try
+            {
+                Debug.Log("[Connect] Attempting to connect directly...");
+                State = ClientState.AttemptDirect;
+                var ep = await TryDirectConnect(peerEp, ct);
+                State = ClientState.Connected;
+                Debug.Log("[Connect] Connected directly");
+                return ep;
+            }
+            catch (Exception e)
+            {
+                Debug.Log($"[Connect] Failed to connect directly: {e.Message}");
+            }
 
+            try
+            {
+                Debug.Log("[Connect] Attempting to connect using UPnP...");
+                State = ClientState.AttemptUPnP;
+                var ep = await TryUPnP(peerEp, ct);
+                State = ClientState.Connected;
+                Debug.Log("[Connect] Connected directly (using UPnP)");
+                return ep;
+            }
+            catch (Exception e)
+            {
+                Debug.Log($"[Connect] Failed to connect using UPnP: {e.Message}");
+            }
+
+            try
+            {
+                Debug.Log("[Connect] Attempting to punchthrough...");
+                State = ClientState.AttemptPunchthrough;
+                var ep = await TryPunch(peerEp, ct);
+                State = ClientState.Connected;
+                Debug.Log("[Connect] Connected using punchthrough");
+                return ep;
+            }
+            catch (Exception e)
+            {
+                Debug.Log($"[Connect] Failed to punchthrough: {e.Message}");
+            }
+
+            Debug.Log("[Connect] Connected using relay");
             State = ClientState.Connected;
             return _relayEp;
         }
@@ -355,23 +392,34 @@ namespace Netcode.P2P
             }
         }
 
+        private async Task<IPEndPoint> TryDirectConnect(IPEndPoint peer, CancellationToken ct)
+        {
+            throw new NotImplementedException("Not implemented yet");
+        }
+
+        private async Task<IPEndPoint> TryUPnP(IPEndPoint peer, CancellationToken ct)
+        {
+            throw new NotImplementedException("Not implemented yet");
+        }
+
+        private async Task<IPEndPoint> TryPunch(IPEndPoint peer, CancellationToken ct)
+        {
+            throw new NotImplementedException("Not implemented yet");
+        }
+
         #endregion
 
         #region Rollback
 
         public void SendTo(in Message message, EndPoint addr)
         {
-            byte[] payload = MemoryPackSerializer.Serialize(message);
-
-            byte[] pkt = new byte[payload.Length + 1];
+            byte[] pkt = new byte[message.SerdeSize() + 1];
             pkt[0] = UDP_RELAY;
-            Buffer.BlockCopy(payload, 0, pkt, 1, payload.Length);
-
+            message.Serialize(pkt.AsSpan()[1..]);
             if (pkt.Length > IDEAL_MAX_UDP_PACKET_SIZE)
             {
                 Debug.Log($"Sending UDP packet of size {pkt.Length} bytes, which is larger than ideal ({IDEAL_MAX_UDP_PACKET_SIZE}).");
             }
-
             _udp.Client.SendTo(pkt, SocketFlags.None, addr);
         }
 
@@ -405,8 +453,13 @@ namespace Netcode.P2P
                         continue;
                     }
 
-                    Message? message = MemoryPackSerializer.Deserialize<Message>(_buffer.AsSpan().Slice(offset, len));
-                    if (message != null) received.Add((remote, message.Value));
+                    Message message = default;
+                    int parsed = message.Deserialize(_buffer.AsSpan().Slice(offset, len));
+                    if (parsed != len)
+                    {
+                        throw new InvalidOperationException("Received more bytes than message required");
+                    }
+                    received.Add((remote, message));
                 }
                 catch (SocketException ex) when (ex.SocketErrorCode == SocketError.WouldBlock)
                 {
