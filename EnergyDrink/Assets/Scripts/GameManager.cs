@@ -28,12 +28,16 @@ public class GameManager : MonoBehaviour
     void Awake()
     {
         _playing = false;
-        _client = new SteamMatchmakingClient();
     }
 
     void OnDestroy()
     {
         _playing = false;
+    }
+
+    void Start()
+    {
+        _client = new SteamMatchmakingClient();
     }
 
     public void CreateLobby() => StartCoroutine(CreateLobbyRoutine());
@@ -107,6 +111,10 @@ public class GameManager : MonoBehaviour
 
     void FixedUpdate()
     {
+        if (_client == null)
+        {
+            return;
+        }
         if (!_playing)
         {
             return;
@@ -146,9 +154,7 @@ public class GameManager : MonoBehaviour
 
         if (_session.CurrentState == SessionState.Running)
         {
-            Debug.Log("running");
             _session.AddLocalInput(new PlayerHandle(_client.MyHandle), new Input(f1Input));
-
             try
             {
                 List<RollbackRequest<GameState, Input>> requests = _session.AdvanceFrame();
