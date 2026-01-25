@@ -361,7 +361,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ZoomOffset: 0.5
-  CameraOffset: 0
+  CameraSpeed: 5
+  CameraOffset: {x: 0, y: 3, z: -10}
+  XBounds: {x: -10000, y: 10000}
+  YBounds: {x: -10000, y: 10000}
 --- !u!1 &556815171
 GameObject:
   m_ObjectHideFlags: 0
@@ -595,6 +598,7 @@ MonoBehaviour:
     NoteHeight: 0.208333
     Background: {fileID: -5601152777036854194, guid: eee69862c9da77d4e9c779353d01a970, type: 3}
     Note: {fileID: -1927351262277573665, guid: e8faf1ba3f363d219b11a69f037cc2c8, type: 3}
+  CameraControl: {fileID: 519420033}
 --- !u!4 &2114326935
 Transform:
   m_ObjectHideFlags: 0
