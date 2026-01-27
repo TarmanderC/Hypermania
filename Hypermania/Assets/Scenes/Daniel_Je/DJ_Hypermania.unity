@@ -223,6 +223,7 @@ GameObject:
   - component: {fileID: 519420029}
   - component: {fileID: 519420030}
   - component: {fileID: 519420033}
+  - component: {fileID: 519420034}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -361,8 +362,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CameraSpeed: 10
-  XBounds: {x: -5, y: 5}
-  YBounds: {x: 0, y: 5}
+  XBounds: {x: -10, y: 10}
+  YBounds: {x: -5, y: 5}
+--- !u!114 &519420034
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 519420028}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8c35b71d2e36d64caa32ff35757d21a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  TrackerPrefab: {fileID: 1957049039675880515, guid: 58f827795c598644583265eab584da02, type: 3}
 --- !u!1 &556815171
 GameObject:
   m_ObjectHideFlags: 0
@@ -597,6 +611,7 @@ MonoBehaviour:
     Background: {fileID: -5601152777036854194, guid: eee69862c9da77d4e9c779353d01a970, type: 3}
     Note: {fileID: -1927351262277573665, guid: e8faf1ba3f363d219b11a69f037cc2c8, type: 3}
   CameraControl: {fileID: 519420033}
+  CameraIndicator: {fileID: 519420034}
 --- !u!4 &2114326935
 Transform:
   m_ObjectHideFlags: 0
