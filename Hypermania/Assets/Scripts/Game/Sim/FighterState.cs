@@ -3,6 +3,7 @@ using Design;
 using Design.Animation;
 using MemoryPack;
 using UnityEngine;
+using UnityEngine.UIElements;
 using Utils;
 using Utils.SoftFloat;
 
@@ -26,6 +27,7 @@ namespace Game.Sim
         public SVector2 Position;
         public SVector2 Velocity;
         public sfloat Health;
+        public InputHistory InputH;
 
         public CharacterState State { get; private set; }
         public Frame StateStart { get; private set; }
@@ -54,6 +56,7 @@ namespace Game.Sim
             state.State = CharacterState.Idle;
             state.StateStart = Frame.FirstFrame;
             state.StateEnd = Frame.Infinity;
+            state.InputH = new InputHistory();
             // TODO: character dependent?
             state.Health = (sfloat)config.Health;
             state.FacingDir = facingDirection;
@@ -97,7 +100,7 @@ namespace Game.Sim
             }
         }
 
-        public void ApplyMovementIntent(GameInput input, CharacterConfig characterConfig, GlobalConfig config)
+        public void ApplyMovementIntent(Frame frame, CharacterConfig characterConfig, GlobalConfig config)
         {
             if (State != CharacterState.Idle && State != CharacterState.Walk && State != CharacterState.Jump)
             {
@@ -106,22 +109,54 @@ namespace Game.Sim
             if (Location(config) == FighterLocation.Grounded)
             {
                 Velocity.x = 0;
-                if (input.Flags.HasFlag(InputFlags.Left))
+                if (InputH.IsHeld(InputFlags.Left) && InputH.PressedAndReleasedRecently(InputFlags.Left, 12, 1))
+                {
+                    Velocity.x += 2 * (sfloat)(-characterConfig.Speed);
+                    State = FacingDir == FighterFacing.Left ? CharacterState.ForwardDash : CharacterState.BackDash;
+                    StateEnd = frame + 12;
+                    StateStart = frame;
+                    return;
+                }
+
+                if (InputH.IsHeld(InputFlags.Right) && InputH.PressedAndReleasedRecently(InputFlags.Right, 12, 1))
+                {
+                    Velocity.x += 2 * (sfloat)characterConfig.Speed;
+                    State = FacingDir == FighterFacing.Right ? CharacterState.ForwardDash : CharacterState.BackDash;
+                    StateEnd = frame + 12;
+                    StateStart = frame;
+                    return;
+                }
+
+                if (InputH.IsHeld(InputFlags.Left))
+                {
                     Velocity.x += (sfloat)(-characterConfig.Speed);
-                if (input.Flags.HasFlag(InputFlags.Right))
+                }
+                if (InputH.IsHeld(InputFlags.Right))
+                {
                     Velocity.x += (sfloat)characterConfig.Speed;
-                if (input.Flags.HasFlag(InputFlags.Up))
-                    Velocity.y = (sfloat)characterConfig.JumpVelocity;
+                }
+
+                if (InputH.IsHeld(InputFlags.Up))
+                {
+                    if (InputH.PressedRecently(InputFlags.Down, 8))
+                    {
+                        Velocity.y = (sfloat)1.25 * (sfloat)characterConfig.JumpVelocity;
+                    }
+                    else
+                    {
+                        Velocity.y = (sfloat)characterConfig.JumpVelocity;
+                    }
+                }
             }
         }
 
-        public void ApplyActiveState(Frame frame, GameInput input, CharacterConfig characterConfig, GlobalConfig config)
+        public void ApplyActiveState(Frame frame, CharacterConfig characterConfig, GlobalConfig config)
         {
             if (State != CharacterState.Idle && State != CharacterState.Walk && State != CharacterState.Jump)
             {
                 return;
             }
-            if (input.Flags.HasFlag(InputFlags.LightAttack))
+            if (InputH.PressedRecently(InputFlags.LightAttack, 8))
             {
                 switch (Location(config))
                 {
@@ -142,7 +177,7 @@ namespace Game.Sim
                         break;
                 }
             }
-            else if (input.Flags.HasFlag(InputFlags.SuperAttack))
+            else if (InputH.PressedRecently(InputFlags.SuperAttack, 8))
             {
                 switch (Location(config))
                 {

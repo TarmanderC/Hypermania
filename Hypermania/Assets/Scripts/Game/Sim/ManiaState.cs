@@ -142,7 +142,7 @@ namespace Game.Sim
                 }
                 ManiaNote note = Channels[i].Notes.Front();
                 Frame noteTick = note.Tick;
-                bool hasInput = input.Flags.HasFlag(_channelInput[i]);
+                bool hasInput = input.HasInput(_channelInput[i]);
 
                 if (hasInput && frame < noteTick - Config.MissTotalRange)
                 {

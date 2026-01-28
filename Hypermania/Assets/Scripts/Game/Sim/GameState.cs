@@ -114,6 +114,12 @@ namespace Game.Sim
             }
             Frame += 1;
 
+            // Push the current input into the input history, to read for buffering.
+            for (int i = 0; i < Fighters.Length; i++)
+            {
+                Fighters[i].InputH.PushInput(inputs[i].input);
+            }
+
             // Tick the state machine, making the character idle if an animation/stun finishes
             for (int i = 0; i < Fighters.Length; i++)
             {
@@ -125,12 +131,12 @@ namespace Game.Sim
                 // This function internally appies changes to the fighter's velocity based on movement inputs
                 for (int i = 0; i < Fighters.Length; i++)
                 {
-                    Fighters[i].ApplyMovementIntent(inputs[i].input, characters[i], config);
+                    Fighters[i].ApplyMovementIntent(Frame, characters[i], config);
                 }
                 // If a player applies inputs to start a state at the start of the frame, we should apply those immediately
                 for (int i = 0; i < Fighters.Length; i++)
                 {
-                    Fighters[i].ApplyActiveState(Frame, inputs[i].input, characters[i], config);
+                    Fighters[i].ApplyActiveState(Frame, characters[i], config);
                 }
             }
             else if (GameMode == GameMode.Mania)
