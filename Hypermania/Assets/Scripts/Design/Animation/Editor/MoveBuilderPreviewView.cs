@@ -1,6 +1,7 @@
 using System;
 using UnityEditor;
 using UnityEngine;
+using Utils.SoftFloat;
 
 namespace Design.Animation.Editors
 {
@@ -35,6 +36,11 @@ namespace Design.Animation.Editors
         private ResizeHandle _activeHandle = ResizeHandle.None;
         private Vector2 _resizeStartMouse;
         private BoxData _resizeStartBox;
+
+        private bool _kbDragging;
+        private int _kbDragIndex = -1;
+        private Vector2 _kbDragStartMouse;
+        private Vector2 _kbDragStartKnockbackLocal;
 
         private bool _animationMode;
 
@@ -86,7 +92,7 @@ namespace Design.Animation.Editors
 
             SampleAnimation(model, tps);
 
-            Texture tex = Render(rect, model);
+            Texture tex = Render(rect);
             if (tex != null)
                 GUI.DrawTexture(rect, tex, ScaleMode.StretchToFill, false);
 
@@ -137,13 +143,16 @@ namespace Design.Animation.Editors
                 return;
 
             // Always end drag on mouse up (even if outside the rect).
-            if ((_dragging || _resizing) && e.type == EventType.MouseUp && e.button == 0)
+            if ((_dragging || _resizing || _kbDragging) && e.type == EventType.MouseUp && e.button == 0)
             {
                 _dragging = false;
                 _dragIndex = -1;
 
                 _resizing = false;
                 _activeHandle = ResizeHandle.None;
+
+                _kbDragging = false;
+                _kbDragIndex = -1;
             }
 
             if (!rect.Contains(e.mousePosition))
@@ -195,7 +204,7 @@ namespace Design.Animation.Editors
             AnimationMode.EndSampling();
         }
 
-        private Texture Render(Rect rect, MoveBuilderModel model)
+        private Texture Render(Rect rect)
         {
             _preview.BeginPreview(rect, GUIStyle.none);
             _preview.Render(allowScriptableRenderPipeline: true);
@@ -228,11 +237,16 @@ namespace Design.Animation.Editors
                     EditorStyles.whiteMiniLabel
                 );
 
-                HandleBoxDrag(rect, model, frame, i, guiRect, root, cam);
+                // handle resize handles first
                 if (i == model.SelectedBoxIndex)
                 {
+                    if (box.Props.Kind == HitboxKind.Hitbox)
+                    {
+                        DrawKnockbackArrow(rect, model, i, root, cam);
+                    }
                     HandleResizeHandles(rect, model, i, guiRect, root, cam);
                 }
+                HandleBoxDrag(rect, model, frame, i, guiRect, root, cam);
             }
 
             if (model.SelectedBoxIndex != -1)
@@ -261,6 +275,7 @@ namespace Design.Animation.Editors
             Camera cam
         )
         {
+            EditorGUIUtility.AddCursorRect(guiRect, MouseCursor.MoveArrow);
             var e = Event.current;
             if (e == null)
                 return;
@@ -323,14 +338,14 @@ namespace Design.Animation.Editors
             Rect rSW = HandleRect(guiRect.xMin, guiRect.yMax, size);
 
             // Draw handles
-            DrawHandle(rN);
-            DrawHandle(rS);
-            DrawHandle(rE);
-            DrawHandle(rW);
-            DrawHandle(rNE);
-            DrawHandle(rNW);
-            DrawHandle(rSE);
-            DrawHandle(rSW);
+            DrawHandle(rN, ResizeHandle.N);
+            DrawHandle(rS, ResizeHandle.S);
+            DrawHandle(rE, ResizeHandle.E);
+            DrawHandle(rW, ResizeHandle.W);
+            DrawHandle(rNE, ResizeHandle.NE);
+            DrawHandle(rNW, ResizeHandle.NW);
+            DrawHandle(rSE, ResizeHandle.SE);
+            DrawHandle(rSW, ResizeHandle.SW);
 
             // Mouse down: pick active handle
             if (!_resizing && e.type == EventType.MouseDown && e.button == 0 && rect.Contains(e.mousePosition))
@@ -374,10 +389,10 @@ namespace Design.Animation.Editors
                 Vector2 d = new Vector2(localDelta3.x, localDelta3.y);
 
                 // Work with edges in local space
-                float cx = _resizeStartBox.CenterLocal.x;
-                float cy = _resizeStartBox.CenterLocal.y;
-                float hw = _resizeStartBox.SizeLocal.x * 0.5f;
-                float hh = _resizeStartBox.SizeLocal.y * 0.5f;
+                float cx = (float)_resizeStartBox.CenterLocal.x;
+                float cy = (float)_resizeStartBox.CenterLocal.y;
+                float hw = (float)_resizeStartBox.SizeLocal.x * 0.5f;
+                float hh = (float)_resizeStartBox.SizeLocal.y * 0.5f;
 
                 float left = cx - hw;
                 float right = cx + hw;
@@ -421,7 +436,7 @@ namespace Design.Animation.Editors
                 // Optional: Shift preserves aspect ratio from start box.
                 if (e.shift)
                 {
-                    float startAspect = SafeAspect(_resizeStartBox.SizeLocal);
+                    float startAspect = SafeAspect((Vector2)_resizeStartBox.SizeLocal);
                     ApplyAspectConstraint(ref left, ref right, ref bottom, ref top, startAspect, _activeHandle);
                 }
 
@@ -433,8 +448,8 @@ namespace Design.Animation.Editors
                     top = bottom + minSize;
 
                 BoxData updated = _resizeStartBox;
-                updated.CenterLocal = new Vector2((left + right) * 0.5f, (bottom + top) * 0.5f);
-                updated.SizeLocal = new Vector2(right - left, top - bottom);
+                updated.CenterLocal = (SVector2)new Vector2((left + right) * 0.5f, (bottom + top) * 0.5f);
+                updated.SizeLocal = (SVector2)new Vector2(right - left, top - bottom);
 
                 model.SetBox(index, updated);
 
@@ -463,10 +478,30 @@ namespace Design.Animation.Editors
             return new Rect(x - size * 0.5f, y - size * 0.5f, size, size);
         }
 
-        private static void DrawHandle(Rect r)
+        private static void DrawHandle(Rect r, ResizeHandle resizeHandle)
         {
             // Small solid square. Keep simple; no special colors beyond default.
             EditorGUI.DrawRect(r, Color.white);
+
+            switch (resizeHandle)
+            {
+                case ResizeHandle.E:
+                case ResizeHandle.W:
+                    EditorGUIUtility.AddCursorRect(r, MouseCursor.ResizeHorizontal);
+                    break;
+                case ResizeHandle.S:
+                case ResizeHandle.N:
+                    EditorGUIUtility.AddCursorRect(r, MouseCursor.ResizeVertical);
+                    break;
+                case ResizeHandle.NE:
+                case ResizeHandle.SW:
+                    EditorGUIUtility.AddCursorRect(r, MouseCursor.ResizeUpRight);
+                    break;
+                case ResizeHandle.NW:
+                case ResizeHandle.SE:
+                    EditorGUIUtility.AddCursorRect(r, MouseCursor.ResizeUpLeft);
+                    break;
+            }
         }
 
         private static float SafeAspect(Vector2 size)
@@ -567,6 +602,94 @@ namespace Design.Animation.Editors
                     }
                 }
             }
+        }
+
+        private void DrawKnockbackArrow(Rect rect, MoveBuilderModel model, int index, Transform root, Camera cam)
+        {
+            var frame = model.GetCurrentFrame();
+            if (frame == null || index < 0 || index >= frame.Boxes.Count)
+                return;
+
+            var box = frame.Boxes[index];
+            var p = box.Props;
+
+            Vector2 centerLocal = (Vector2)box.CenterLocal;
+            Vector2 kbLocal = (Vector2)p.Knockback;
+
+            Vector2 tipLocal = centerLocal + kbLocal;
+
+            Vector2 CenterGui(Vector2 local)
+            {
+                Vector3 world = root.TransformPoint(new Vector3(local.x, local.y, 0f));
+                Vector3 sp = cam.WorldToScreenPoint(world);
+                return new Vector2(rect.x + sp.x, rect.y + (rect.height - sp.y));
+            }
+
+            Vector2 a = CenterGui(centerLocal);
+            Vector2 b = CenterGui(tipLocal);
+
+            Handles.BeginGUI();
+            Color prev = Handles.color;
+            Handles.color = Color.red;
+            Handles.DrawAAPolyLine(2f, a, b);
+
+            Vector2 dir = (b - a);
+            float len = dir.magnitude;
+            if (len > 0.0001f)
+            {
+                dir /= len;
+                Vector2 n = new Vector2(-dir.y, dir.x);
+
+                float headLen = 14f;
+                float headWid = 8f;
+
+                Vector2 tip = b;
+                Vector2 basePt = tip - dir * headLen;
+
+                Vector3[] tri = { tip, basePt + n * headWid, basePt - n * headWid };
+
+                Handles.DrawAAConvexPolygon(tri);
+            }
+
+            const float handleSize = 10f;
+            Rect tipHandle = new Rect(b.x - handleSize * 0.5f, b.y - handleSize * 0.5f, handleSize, handleSize);
+            EditorGUIUtility.AddCursorRect(tipHandle, MouseCursor.MoveArrow);
+
+            var e = Event.current;
+            if (e == null)
+            {
+                Handles.EndGUI();
+                return;
+            }
+
+            if (!_kbDragging && e.type == EventType.MouseDown && e.button == 0 && tipHandle.Contains(e.mousePosition))
+            {
+                _kbDragging = true;
+                _kbDragIndex = index;
+                _kbDragStartMouse = e.mousePosition;
+                _kbDragStartKnockbackLocal = (Vector2)p.Knockback;
+                e.Use();
+                Handles.EndGUI();
+                return;
+            }
+
+            if (_kbDragging && _kbDragIndex == index && e.type == EventType.MouseDrag && e.button == 0)
+            {
+                Vector2 deltaPx = e.mousePosition - _kbDragStartMouse;
+
+                float worldPerPixel = (cam.orthographicSize * 2f) / Mathf.Max(1f, rect.height);
+                Vector2 deltaWorld = new Vector2(deltaPx.x * worldPerPixel, -deltaPx.y * worldPerPixel);
+
+                Vector3 localDelta3 = root.InverseTransformVector(new Vector3(deltaWorld.x, deltaWorld.y, 0f));
+                Vector2 localDelta = new Vector2(localDelta3.x, localDelta3.y);
+
+                Vector2 newKbLocal = _kbDragStartKnockbackLocal + localDelta;
+                model.EditBoxKnockback(index, newKbLocal);
+
+                e.Use();
+            }
+            Handles.color = prev;
+            Handles.EndGUI();
         }
     }
 }

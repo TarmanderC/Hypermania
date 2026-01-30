@@ -1,6 +1,7 @@
 using System;
 using UnityEditor;
 using UnityEngine;
+using Utils.SoftFloat;
 
 namespace Design.Animation.Editors
 {
@@ -10,6 +11,7 @@ namespace Design.Animation.Editors
         public GameObject CharacterPrefab;
         public AnimationClip Clip;
         public HitboxData Data;
+        public HitboxData RevertData;
 
         public int CurrentTick;
         public int SelectedBoxIndex = -1;
@@ -47,7 +49,9 @@ namespace Design.Animation.Editors
         {
             if (!Data)
                 return;
+
             CurrentTick = Mathf.Clamp(tick, 0, TotalTicks - 1);
+            SelectBox(SelectedBoxIndex);
         }
 
         public FrameData GetCurrentFrame()
@@ -61,7 +65,14 @@ namespace Design.Animation.Editors
         {
             var frame = GetCurrentFrame();
             int max = frame != null ? frame.Boxes.Count - 1 : -1;
-            SelectedBoxIndex = Mathf.Clamp(index, -1, max);
+            if (index > max)
+            {
+                SelectedBoxIndex = -1;
+            }
+            else
+            {
+                SelectedBoxIndex = index;
+            }
         }
 
         public void AddBox(HitboxKind kind)
@@ -75,9 +86,15 @@ namespace Design.Animation.Editors
             var b = new BoxData
             {
                 Name = kind == HitboxKind.Hitbox ? "Hit" : "Hurt",
-                CenterLocal = Vector2.zero,
-                SizeLocal = new Vector2(0.5f, 0.5f),
-                Props = new BoxProps { Kind = kind, HitstunTicks = kind == HitboxKind.Hitbox ? 12 : 0 },
+                CenterLocal = SVector2.zero,
+                SizeLocal = new SVector2((sfloat)0.5f, (sfloat)0.5f),
+                Props = new BoxProps
+                {
+                    Kind = kind,
+                    HitstunTicks = kind == HitboxKind.Hitbox ? 12 : 0,
+                    Knockback = new SVector2(1, 0),
+                    StartsRhythmCombo = false,
+                },
             };
 
             frame.Boxes.Add(b);
@@ -121,6 +138,26 @@ namespace Design.Animation.Editors
             MarkDirty();
         }
 
+        public void EditBoxKnockback(int index, Vector2 knockback)
+        {
+            var frame = GetCurrentFrame();
+            if (frame == null)
+                return;
+            if (index < 0 || index >= frame.Boxes.Count)
+                return;
+
+            var b = frame.Boxes[index];
+            if (b.Props.Knockback == (SVector2)knockback)
+                return;
+
+            RecordUndo("Edit Box Knockback");
+
+            b.Props.Knockback = (SVector2)knockback;
+            frame.Boxes[index] = b;
+
+            MarkDirty();
+        }
+
         public void MoveBoxCenter(int index, Vector2 newCenterLocal)
         {
             var frame = GetCurrentFrame();
@@ -130,12 +167,12 @@ namespace Design.Animation.Editors
                 return;
 
             var b = frame.Boxes[index];
-            if (b.CenterLocal == newCenterLocal)
+            if (b.CenterLocal == (SVector2)newCenterLocal)
                 return;
 
             RecordUndo("Move Box");
 
-            b.CenterLocal = newCenterLocal;
+            b.CenterLocal = (SVector2)newCenterLocal;
             frame.Boxes[index] = b;
 
             MarkDirty();

@@ -15,9 +15,12 @@ MonoBehaviour:
   Character: 0
   Prefab: {fileID: 2762876754181091661, guid: 7a8c69e9ceb7f4437981eec3dfb86f82, type: 3}
   AnimationController: {fileID: 22100000, guid: 272c99acac77ff5b785247e7f94e4af8, type: 2}
-  Speed: 5
-  JumpVelocity: 7
-  Health: 100
+  Speed:
+    rawValue: 1082130432
+  JumpVelocity:
+    rawValue: 1088421888
+  Health:
+    rawValue: 1120403456
   Hitboxes:
     values:
     - {fileID: 11400000, guid: f6a168494d73f2e03a2cfaba3f22e9b2, type: 2}

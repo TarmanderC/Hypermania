@@ -78,7 +78,7 @@ namespace Game.View
                 _fighters[i].Init(characters[i]);
 
                 Manias[i].Init();
-                Healthbars[i].SetMaxHealth(characters[i].Health);
+                Healthbars[i].SetMaxHealth((float)characters[i].Health);
             }
             _conductor.Init();
         }

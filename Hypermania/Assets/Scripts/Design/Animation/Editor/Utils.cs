@@ -7,11 +7,15 @@ namespace Design.Animation.Editors
     {
         public static Rect LocalBoxToGuiRect(Rect rect, Camera cam, Transform root, BoxData box)
         {
-            float hw = box.SizeLocal.x * 0.5f;
-            float hh = box.SizeLocal.y * 0.5f;
+            float hw = (float)box.SizeLocal.x * 0.5f;
+            float hh = (float)box.SizeLocal.y * 0.5f;
 
-            Vector3 w0 = root.TransformPoint(new Vector3(box.CenterLocal.x - hw, box.CenterLocal.y - hh, 0));
-            Vector3 w1 = root.TransformPoint(new Vector3(box.CenterLocal.x + hw, box.CenterLocal.y + hh, 0));
+            Vector3 w0 = root.TransformPoint(
+                new Vector3((float)box.CenterLocal.x - hw, (float)box.CenterLocal.y - hh, 0)
+            );
+            Vector3 w1 = root.TransformPoint(
+                new Vector3((float)box.CenterLocal.x + hw, (float)box.CenterLocal.y + hh, 0)
+            );
 
             Vector2 g0 = WorldToGui(rect, cam, w0);
             Vector2 g1 = WorldToGui(rect, cam, w1);

@@ -62,7 +62,7 @@ namespace Game.Sim
             state.ComboedCount = 0;
             state.InputH = new InputHistory();
             // TODO: character dependent?
-            state.Health = (sfloat)config.Health;
+            state.Health = config.Health;
             state.FacingDir = facingDirection;
             return state;
         }
@@ -77,7 +77,7 @@ namespace Game.Sim
 
         public FighterLocation Location(GlobalConfig config)
         {
-            if (Position.y > (sfloat)config.GroundY)
+            if (Position.y > config.GroundY)
             {
                 return FighterLocation.Airborne;
             }
@@ -120,10 +120,12 @@ namespace Game.Sim
             }
             if (Location(config) == FighterLocation.Grounded)
             {
+                // this prevents jumping after dashing preserving momentum
                 Velocity.x = 0;
+
                 if (InputH.IsHeld(InputFlags.Left) && InputH.PressedAndReleasedRecently(InputFlags.Left, 12, 1))
                 {
-                    Velocity.x += 2 * (sfloat)(-characterConfig.Speed);
+                    Velocity.x += 2 * -characterConfig.Speed;
                     State = FacingDir == FighterFacing.Left ? CharacterState.ForwardDash : CharacterState.BackDash;
                     StateEnd = frame + 12;
                     StateStart = frame;
@@ -132,7 +134,7 @@ namespace Game.Sim
 
                 if (InputH.IsHeld(InputFlags.Right) && InputH.PressedAndReleasedRecently(InputFlags.Right, 12, 1))
                 {
-                    Velocity.x += 2 * (sfloat)characterConfig.Speed;
+                    Velocity.x += 2 * characterConfig.Speed;
                     State = FacingDir == FighterFacing.Right ? CharacterState.ForwardDash : CharacterState.BackDash;
                     StateEnd = frame + 12;
                     StateStart = frame;
@@ -141,22 +143,22 @@ namespace Game.Sim
 
                 if (InputH.IsHeld(InputFlags.Left))
                 {
-                    Velocity.x += (sfloat)(-characterConfig.Speed);
+                    Velocity.x += -characterConfig.Speed;
                 }
                 if (InputH.IsHeld(InputFlags.Right))
                 {
-                    Velocity.x += (sfloat)characterConfig.Speed;
+                    Velocity.x += characterConfig.Speed;
                 }
 
                 if (InputH.IsHeld(InputFlags.Up))
                 {
                     if (InputH.PressedRecently(InputFlags.Down, 8))
                     {
-                        Velocity.y = (sfloat)1.25 * (sfloat)characterConfig.JumpVelocity;
+                        Velocity.y = (sfloat)1.25 * characterConfig.JumpVelocity;
                     }
                     else
                     {
-                        Velocity.y = (sfloat)characterConfig.JumpVelocity;
+                        Velocity.y = characterConfig.JumpVelocity;
                     }
                 }
             }
@@ -208,31 +210,31 @@ namespace Game.Sim
         public void UpdatePosition(GlobalConfig config)
         {
             // Apply gravity if not grounded
-            if (Position.y > (sfloat)config.GroundY || Velocity.y > 0)
+            if (Position.y > config.GroundY || Velocity.y > 0)
             {
-                Velocity.y += (sfloat)config.Gravity * 1 / 64;
+                Velocity.y += config.Gravity * 1 / 64;
             }
 
             // Update Position
             Position += Velocity * 1 / 64;
 
             // Floor collision
-            if (Position.y <= (sfloat)config.GroundY)
+            if (Position.y <= config.GroundY)
             {
-                Position.y = (sfloat)config.GroundY;
+                Position.y = config.GroundY;
 
                 if (Velocity.y < 0)
                     Velocity.y = 0;
             }
-            if (Position.x >= (sfloat)config.WallsX)
+            if (Position.x >= config.WallsX)
             {
-                Position.x = (sfloat)config.WallsX;
+                Position.x = config.WallsX;
                 if (Velocity.x > 0)
                     Velocity.x = 0;
             }
-            if (Position.x <= -(sfloat)config.WallsX)
+            if (Position.x <= -config.WallsX)
             {
-                Position.x = -(sfloat)config.WallsX;
+                Position.x = -config.WallsX;
                 if (Velocity.x < 0)
                     Velocity.x = 0;
             }
@@ -260,12 +262,12 @@ namespace Game.Sim
 
             foreach (var box in frameData.Boxes)
             {
-                SVector2 centerLocal = (SVector2)box.CenterLocal;
+                SVector2 centerLocal = box.CenterLocal;
                 if (FacingDir == FighterFacing.Left)
                 {
                     centerLocal.x *= -1;
                 }
-                SVector2 sizeLocal = (SVector2)box.SizeLocal;
+                SVector2 sizeLocal = box.SizeLocal;
                 SVector2 centerWorld = Position + centerLocal;
                 BoxProps newProps = box.Props;
                 if (FacingDir == FighterFacing.Left)
@@ -292,7 +294,7 @@ namespace Game.Sim
             // TODO: if high enough, go knockdown
             Health -= props.Damage;
 
-            Velocity = (SVector2)props.Knockback;
+            Velocity = props.Knockback;
 
             ComboedCount++;
         }

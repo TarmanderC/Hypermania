@@ -40,6 +40,8 @@ namespace Game.Sim
             Flags = flags;
         }
 
+        public static GameInput None => new GameInput(InputFlags.None);
+
         [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
         public bool HasInput(InputFlags input)
         {

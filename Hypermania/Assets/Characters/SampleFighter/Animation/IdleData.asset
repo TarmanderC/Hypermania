@@ -16,431 +16,990 @@ MonoBehaviour:
   Frames:
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0.0049504936, y: 0.004950464}
-      SizeLocal: {x: 1.0544555, y: 1.618812}
+      CenterLocal:
+        x:
+          rawValue: 3143500928
+        y:
+          rawValue: 3143500800
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070385392
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0.0049504936, y: 0.004950464}
-      SizeLocal: {x: 1.0544555, y: 1.618812}
+      CenterLocal:
+        x:
+          rawValue: 3143500928
+        y:
+          rawValue: 3143500800
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070385392
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0.0049504936, y: 0.004950464}
-      SizeLocal: {x: 1.0544555, y: 1.618812}
+      CenterLocal:
+        x:
+          rawValue: 3143500928
+        y:
+          rawValue: 3143500800
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070385392
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0.0049504936, y: 0.004950464}
-      SizeLocal: {x: 1.0544555, y: 1.618812}
+      CenterLocal:
+        x:
+          rawValue: 3143500928
+        y:
+          rawValue: 3143500800
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070385392
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0.0049504936, y: 0.004950464}
-      SizeLocal: {x: 1.0544555, y: 1.618812}
+      CenterLocal:
+        x:
+          rawValue: 3143500928
+        y:
+          rawValue: 3143500800
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070385392
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0.0049504936, y: 0.004950464}
-      SizeLocal: {x: 1.0544555, y: 1.618812}
+      CenterLocal:
+        x:
+          rawValue: 3143500928
+        y:
+          rawValue: 3143500800
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070385392
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0.0049504936, y: 0.004950464}
-      SizeLocal: {x: 1.0544555, y: 1.618812}
+      CenterLocal:
+        x:
+          rawValue: 3143500800
+        y:
+          rawValue: 3147039424
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070707466
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0.0049504936, y: 0.004950464}
-      SizeLocal: {x: 1.0544555, y: 1.618812}
+      CenterLocal:
+        x:
+          rawValue: 3143500800
+        y:
+          rawValue: 3147039424
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070707466
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0.0049504936, y: 0.004950464}
-      SizeLocal: {x: 1.0544555, y: 1.618812}
+      CenterLocal:
+        x:
+          rawValue: 3143500800
+        y:
+          rawValue: 3147039424
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070707466
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0.0049504936, y: 0.004950464}
-      SizeLocal: {x: 1.0544555, y: 1.618812}
+      CenterLocal:
+        x:
+          rawValue: 3143500800
+        y:
+          rawValue: 3147039424
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070707466
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0.0049504936, y: 0.004950464}
-      SizeLocal: {x: 1.0544555, y: 1.618812}
+      CenterLocal:
+        x:
+          rawValue: 3143500800
+        y:
+          rawValue: 3147039424
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070707466
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0, y: -0.000000059604645}
-      SizeLocal: {x: 1.0544555, y: 1.6782179}
+      CenterLocal:
+        x:
+          rawValue: 3143500800
+        y:
+          rawValue: 991167360
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070934812
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0, y: -0.000000059604645}
-      SizeLocal: {x: 1.0544555, y: 1.6782179}
+      CenterLocal:
+        x:
+          rawValue: 3143500800
+        y:
+          rawValue: 991167360
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070934812
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0, y: -0.000000059604645}
-      SizeLocal: {x: 1.0544555, y: 1.6782179}
+      CenterLocal:
+        x:
+          rawValue: 3143500800
+        y:
+          rawValue: 991167360
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070934812
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0, y: -0.000000059604645}
-      SizeLocal: {x: 1.0544555, y: 1.6782179}
+      CenterLocal:
+        x:
+          rawValue: 3143500800
+        y:
+          rawValue: 991167360
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070934812
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0, y: -0.000000059604645}
-      SizeLocal: {x: 1.0544555, y: 1.6782179}
+      CenterLocal:
+        x:
+          rawValue: 3143500800
+        y:
+          rawValue: 991167360
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070934812
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0, y: -0.000000059604645}
-      SizeLocal: {x: 1.0544555, y: 1.6782179}
+      CenterLocal:
+        x:
+          rawValue: 3143500800
+        y:
+          rawValue: 991167360
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070934812
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0, y: -0.000000059604645}
-      SizeLocal: {x: 1.0544555, y: 1.6782179}
+      CenterLocal:
+        x:
+          rawValue: 3143500800
+        y:
+          rawValue: 991167360
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070934812
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0, y: -0.000000059604645}
-      SizeLocal: {x: 1.0544555, y: 1.6782179}
+      CenterLocal:
+        x:
+          rawValue: 3143500800
+        y:
+          rawValue: 991167360
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070934812
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0, y: -0.000000059604645}
-      SizeLocal: {x: 1.0544555, y: 1.6782179}
+      CenterLocal:
+        x:
+          rawValue: 3143500800
+        y:
+          rawValue: 991167360
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070934812
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0, y: -0.000000059604645}
-      SizeLocal: {x: 1.0544555, y: 1.6782179}
+      CenterLocal:
+        x:
+          rawValue: 3143500800
+        y:
+          rawValue: 991167360
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070934812
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0, y: -0.000000059604645}
-      SizeLocal: {x: 1.0544555, y: 1.6782179}
+      CenterLocal:
+        x:
+          rawValue: 3143500800
+        y:
+          rawValue: 991167360
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070934812
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0, y: 0.004950464}
-      SizeLocal: {x: 1.0544555, y: 1.618812}
+      CenterLocal:
+        x:
+          rawValue: 3143500800
+        y:
+          rawValue: 3130261760
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070385392
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0, y: 0.004950464}
-      SizeLocal: {x: 1.0544555, y: 1.618812}
+      CenterLocal:
+        x:
+          rawValue: 3143500800
+        y:
+          rawValue: 3130261760
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070385392
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0, y: 0.004950464}
-      SizeLocal: {x: 1.0544555, y: 1.618812}
+      CenterLocal:
+        x:
+          rawValue: 3143500800
+        y:
+          rawValue: 3130261760
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070385392
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0, y: 0.004950464}
-      SizeLocal: {x: 1.0544555, y: 1.618812}
+      CenterLocal:
+        x:
+          rawValue: 3143500800
+        y:
+          rawValue: 3130261760
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070385392
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0, y: 0.004950464}
-      SizeLocal: {x: 1.0544555, y: 1.618812}
+      CenterLocal:
+        x:
+          rawValue: 3143500800
+        y:
+          rawValue: 3130261760
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070385392
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0, y: 0.004950464}
-      SizeLocal: {x: 1.0544555, y: 1.618812}
+      CenterLocal:
+        x:
+          rawValue: 3143500800
+        y:
+          rawValue: 996017792
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070650630
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0, y: 0.004950464}
-      SizeLocal: {x: 1.0544555, y: 1.618812}
+      CenterLocal:
+        x:
+          rawValue: 3143500800
+        y:
+          rawValue: 996017792
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070650630
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0, y: 0.004950464}
-      SizeLocal: {x: 1.0544555, y: 1.618812}
+      CenterLocal:
+        x:
+          rawValue: 3143500800
+        y:
+          rawValue: 996017792
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070650630
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0, y: 0.004950464}
-      SizeLocal: {x: 1.0544555, y: 1.618812}
+      CenterLocal:
+        x:
+          rawValue: 3143500800
+        y:
+          rawValue: 996017792
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070650630
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0, y: 0.004950464}
-      SizeLocal: {x: 1.0544555, y: 1.618812}
+      CenterLocal:
+        x:
+          rawValue: 3143500800
+        y:
+          rawValue: 996017792
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070650630
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0, y: -0.0049505234}
-      SizeLocal: {x: 1.0544555, y: 1.6782179}
+      CenterLocal:
+        x:
+          rawValue: 3143500800
+        y:
+          rawValue: 3130261504
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070991650
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0, y: -0.0049505234}
-      SizeLocal: {x: 1.0544555, y: 1.6782179}
+      CenterLocal:
+        x:
+          rawValue: 3143500800
+        y:
+          rawValue: 3130261504
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070991650
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0, y: -0.0049505234}
-      SizeLocal: {x: 1.0544555, y: 1.6782179}
+      CenterLocal:
+        x:
+          rawValue: 3143500800
+        y:
+          rawValue: 3130261504
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070991650
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0, y: -0.0049505234}
-      SizeLocal: {x: 1.0544555, y: 1.6782179}
+      CenterLocal:
+        x:
+          rawValue: 3143500800
+        y:
+          rawValue: 3130261504
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070991650
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0, y: -0.0049505234}
-      SizeLocal: {x: 1.0544555, y: 1.6782179}
+      CenterLocal:
+        x:
+          rawValue: 3143500800
+        y:
+          rawValue: 3130261504
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070991650
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0, y: -0.0049505234}
-      SizeLocal: {x: 1.0544555, y: 1.6782179}
+      CenterLocal:
+        x:
+          rawValue: 3143500800
+        y:
+          rawValue: 3130261504
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070991650
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0, y: 0.004950464}
-      SizeLocal: {x: 1.0544555, y: 1.6584159}
+      CenterLocal:
+        x:
+          rawValue: 3143500800
+        y:
+          rawValue: 3130261504
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070991650
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0, y: 0.004950464}
-      SizeLocal: {x: 1.0544555, y: 1.6584159}
+      CenterLocal:
+        x:
+          rawValue: 3143500800
+        y:
+          rawValue: 3130261504
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070991650
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0, y: 0.004950464}
-      SizeLocal: {x: 1.0544555, y: 1.6584159}
+      CenterLocal:
+        x:
+          rawValue: 3143500800
+        y:
+          rawValue: 3130261504
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070991650
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0, y: 0.004950464}
-      SizeLocal: {x: 1.0544555, y: 1.6584159}
+      CenterLocal:
+        x:
+          rawValue: 3143500800
+        y:
+          rawValue: 3130261504
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070991650
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0
   - Boxes:
     - Name: Hurt
-      CenterLocal: {x: 0, y: 0.004950464}
-      SizeLocal: {x: 1.0544555, y: 1.6584159}
+      CenterLocal:
+        x:
+          rawValue: 3143500800
+        y:
+          rawValue: 3130261504
+      SizeLocal:
+        x:
+          rawValue: 1065838462
+        y:
+          rawValue: 1070991650
       Props:
         Kind: 0
         Damage: 0
         HitstunTicks: 0
         BlockstunTicks: 0
-        Knockback: {x: 0, y: 0}
+        StartsRhythmCombo: 0
+        Knockback:
+          x:
+            rawValue: 1065353216
+          y:
+            rawValue: 0

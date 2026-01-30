@@ -1,6 +1,7 @@
 using Game;
 using UnityEditor;
 using UnityEngine;
+using Utils.SoftFloat;
 
 namespace Design.Animation.Editors
 {
@@ -24,21 +25,23 @@ namespace Design.Animation.Editors
             }
 
             if (GUILayout.Button("Initialize Data"))
-                m.BindDataToClipLength(m, GameManager.TPS);
-            EditorGUILayout.Space(8);
+                m.BindDataToClipLength(m, tps);
+            EditorGUILayout.Space(6);
 
+            EditorGUILayout.LabelField("Controls", EditorStyles.boldLabel);
+            DrawControls(m);
+            EditorGUILayout.Space(6);
+            EditorGUILayout.LabelField("Box List", EditorStyles.boldLabel);
             DrawBoxList(m);
-            EditorGUILayout.Space(8);
+            EditorGUILayout.Space(6);
+            EditorGUILayout.LabelField("Selected Box", EditorStyles.boldLabel);
             DrawSelectedBoxInspector(m);
 
             EditorGUILayout.Space(8);
-
             if (m.HasUnsavedChanges)
             {
                 EditorGUILayout.HelpBox("You have unsaved changes.", MessageType.Warning);
             }
-            if (GUILayout.Button(m.HasUnsavedChanges ? "Save *" : "Save"))
-                m.SaveAsset();
         }
 
         public void DrawBottomTimelineLayout(MoveBuilderModel m, int tps)
@@ -81,7 +84,7 @@ namespace Design.Animation.Editors
             }
         }
 
-        private void DrawBoxList(MoveBuilderModel m)
+        private void DrawControls(MoveBuilderModel m)
         {
             var frame = m.GetCurrentFrame();
             if (frame == null)
@@ -103,17 +106,24 @@ namespace Design.Animation.Editors
                 if (GUILayout.Button("Set Hitboxes from Previous Frame (Ctrl F)"))
                     m.SetBoxesFromPreviousFrame();
             }
+        }
 
-            EditorGUILayout.Space(6);
+        private void DrawBoxList(MoveBuilderModel m)
+        {
+            var frame = m.GetCurrentFrame();
+            if (frame == null)
+                return;
 
             for (int i = 0; i < frame.Boxes.Count; i++)
             {
                 var b = frame.Boxes[i];
-                bool sel = (i == m.SelectedBoxIndex);
+                bool sel = i == m.SelectedBoxIndex;
                 string label = $"{i}: {b.Props.Kind} - {b.Name}";
 
                 if (GUILayout.Toggle(sel, label, "Button") && !sel)
+                {
                     m.SelectBox(i);
+                }
             }
         }
 
@@ -131,14 +141,12 @@ namespace Design.Animation.Editors
 
             var box = frame.Boxes[m.SelectedBoxIndex];
 
-            EditorGUILayout.LabelField("Selected Box", EditorStyles.boldLabel);
-
             box.Name = EditorGUILayout.TextField("Name", box.Name);
-            box.CenterLocal = EditorGUILayout.Vector2Field("Center (Local)", box.CenterLocal);
+            box.CenterLocal = SFloatGUI.Field("Center (Local)", box.CenterLocal);
 
-            box.SizeLocal = EditorGUILayout.Vector2Field("Size (Local)", box.SizeLocal);
-            box.SizeLocal.x = Mathf.Max(0.001f, box.SizeLocal.x);
-            box.SizeLocal.y = Mathf.Max(0.001f, box.SizeLocal.y);
+            box.SizeLocal = SFloatGUI.Field("Size (Local)", box.SizeLocal);
+            box.SizeLocal.x = Mathsf.Max((sfloat)0.001f, box.SizeLocal.x);
+            box.SizeLocal.y = Mathsf.Max((sfloat)0.001f, box.SizeLocal.y);
 
             var p = box.Props;
             p.Kind = (HitboxKind)EditorGUILayout.EnumPopup("Kind", p.Kind);
@@ -148,12 +156,37 @@ namespace Design.Animation.Editors
                 p.Damage = EditorGUILayout.IntField("Damage", p.Damage);
                 p.HitstunTicks = EditorGUILayout.IntField("Hitstun (ticks)", p.HitstunTicks);
                 p.BlockstunTicks = EditorGUILayout.IntField("Blockstun (ticks)", p.BlockstunTicks);
-                p.Knockback = EditorGUILayout.Vector2Field("Knockback", p.Knockback);
+                p.Knockback = SFloatGUI.Field("Knockback", p.Knockback);
                 p.StartsRhythmCombo = EditorGUILayout.Toggle("Starts rhythm combo", p.StartsRhythmCombo);
             }
             box.Props = p;
 
             m.SetBox(m.SelectedBoxIndex, box);
+        }
+
+        public void DrawToolbar(MoveBuilderModel m)
+        {
+            using (new EditorGUILayout.HorizontalScope(EditorStyles.toolbar))
+            {
+                GUILayout.Label("Move Builder", EditorStyles.toolbarButton);
+
+                GUILayout.FlexibleSpace();
+
+                using (new EditorGUI.DisabledScope(m == null || !m.HasUnsavedChanges))
+                {
+                    if (
+                        GUILayout.Button(
+                            m.HasUnsavedChanges ? "Apply*" : "Apply",
+                            EditorStyles.toolbarButton,
+                            GUILayout.Width(60)
+                        )
+                    )
+                    {
+                        m.SaveAsset();
+                        GUI.FocusControl(null);
+                    }
+                }
+            }
         }
     }
 }

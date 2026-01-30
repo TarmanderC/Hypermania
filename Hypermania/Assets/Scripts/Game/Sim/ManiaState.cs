@@ -96,6 +96,7 @@ namespace Game.Sim
         /// Used to initialized the deque with capacity, not necessarily a hard cap
         /// </summary>
         const int MAX_NOTES = 100;
+        public int TotalNoteCount;
         public ManiaConfig Config;
         public ManiaNoteChannel[] Channels;
         public Frame EndFrame;
@@ -113,6 +114,7 @@ namespace Game.Sim
         {
             ManiaState sim = new ManiaState();
             sim.Config = config;
+            sim.TotalNoteCount = 0;
             sim.Channels = new ManiaNoteChannel[config.NumKeys];
             for (int i = 0; i < config.NumKeys; i++)
             {
@@ -127,13 +129,16 @@ namespace Game.Sim
             EndFrame = endFrame;
         }
 
-        public void QueueNote(int channel, in ManiaNote note)
+        public void QueueNote(int channel, ManiaNote note)
         {
+            note.Id = TotalNoteCount++;
             Channels[channel].Notes.PushBack(note);
         }
 
         public void Tick(Frame frame, GameInput input, List<ManiaEvent> outEvents)
         {
+            if (frame > EndFrame)
+                return;
             for (int i = 0; i < Channels.Length; i++)
             {
                 if (Channels[i].Notes.Count == 0)

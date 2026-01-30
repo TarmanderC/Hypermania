@@ -5,9 +5,7 @@ using UnityEngine;
 
 namespace Utils.SoftFloat
 {
-    //
-    // Summary:
-    //     Representation of 3D vectors and points.
+    [Serializable]
     public struct SVector3 : IEquatable<SVector3>, IFormattable
     {
         public static readonly sfloat Epsilon = (sfloat)1E-5f;

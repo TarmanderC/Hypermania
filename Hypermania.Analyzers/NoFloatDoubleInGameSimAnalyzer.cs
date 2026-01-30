@@ -3,6 +3,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using Microsoft.CodeAnalysis.Operations;
 
 namespace Hypermania.Analyzers;
 
@@ -10,6 +11,7 @@ namespace Hypermania.Analyzers;
 public sealed class NoFloatDoubleInGameSimAnalyzer : DiagnosticAnalyzer
 {
     public const string DiagnosticId = "HM0001";
+    public const string MathfDiagnosticId = "HM0002";
 
     private static readonly DiagnosticDescriptor Rule = new(
         id: DiagnosticId,
@@ -20,8 +22,17 @@ public sealed class NoFloatDoubleInGameSimAnalyzer : DiagnosticAnalyzer
         isEnabledByDefault: true
     );
 
+    private static readonly DiagnosticDescriptor MathfRule = new(
+        id: MathfDiagnosticId,
+        title: "Disallow Mathf in Game.Sim",
+        messageFormat: "Use of '{0}' is not allowed in namespace Game.Sim",
+        category: "Determinism",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true
+    );
+
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics =>
-        ImmutableArray.Create(Rule);
+        ImmutableArray.Create(Rule, MathfRule);
 
     public override void Initialize(AnalysisContext context)
     {
@@ -32,19 +43,23 @@ public sealed class NoFloatDoubleInGameSimAnalyzer : DiagnosticAnalyzer
         context.RegisterSymbolAction(AnalyzeProperty, SymbolKind.Property);
         context.RegisterSymbolAction(AnalyzeMethod, SymbolKind.Method);
         context.RegisterSymbolAction(AnalyzeParameter, SymbolKind.Parameter);
-        context.RegisterSyntaxNodeAction(
-            AnalyzeNumericLiteral,
-            Microsoft.CodeAnalysis.CSharp.SyntaxKind.NumericLiteralExpression
-        );
-        context.RegisterSyntaxNodeAction(
-            AnalyzeCastExpression,
-            Microsoft.CodeAnalysis.CSharp.SyntaxKind.CastExpression
-        );
 
         context.RegisterSyntaxNodeAction(
-            AnalyzeLocalDeclaration,
-            Microsoft.CodeAnalysis.CSharp.SyntaxKind.LocalDeclarationStatement
+            AnalyzeNumericLiteral,
+            SyntaxKind.NumericLiteralExpression
         );
+        context.RegisterSyntaxNodeAction(AnalyzeCastExpression, SyntaxKind.CastExpression);
+        context.RegisterSyntaxNodeAction(
+            AnalyzeLocalDeclaration,
+            SyntaxKind.LocalDeclarationStatement
+        );
+
+        context.RegisterOperationAction(AnalyzeBinaryOperation, OperationKind.Binary);
+        context.RegisterOperationAction(
+            AnalyzeCompoundAssignmentOperation,
+            OperationKind.CompoundAssignment
+        );
+        context.RegisterOperationAction(AnalyzeInvocationOperation, OperationKind.Invocation);
     }
 
     private static bool IsInTargetNamespace(ISymbol symbol)
@@ -53,16 +68,25 @@ public sealed class NoFloatDoubleInGameSimAnalyzer : DiagnosticAnalyzer
         return ns == "Game.Sim" || ns.StartsWith("Game.Sim.");
     }
 
+    private static bool IsInTargetNamespace(OperationAnalysisContext context, SyntaxNode node)
+    {
+        var sym = context.ContainingSymbol;
+        if (sym is not null)
+            return IsInTargetNamespace(sym);
+
+        var model = context.Operation.SemanticModel;
+        if (model is null)
+            return false;
+
+        var enclosing = model.GetEnclosingSymbol(node.SpanStart, context.CancellationToken);
+        return enclosing is not null && IsInTargetNamespace(enclosing);
+    }
+
     private static bool IsBanned(ITypeSymbol? type) =>
         type?.SpecialType is SpecialType.System_Single or SpecialType.System_Double;
 
-    private static bool IsSfloat(ITypeSymbol? type)
-    {
-        if (type is null)
-            return false;
-
-        return type.ToDisplayString() == "Utils.SoftFloat.sfloat";
-    }
+    private static bool IsSfloat(ITypeSymbol? type) =>
+        type?.ToDisplayString() == "Utils.SoftFloat.sfloat";
 
     private static bool IsImmediatelyCastedToSfloat(
         SyntaxNode node,
@@ -90,6 +114,41 @@ public sealed class NoFloatDoubleInGameSimAnalyzer : DiagnosticAnalyzer
                 type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)
             )
         );
+    }
+
+    private static void Report(
+        SyntaxNodeAnalysisContext context,
+        Location location,
+        ITypeSymbol type
+    )
+    {
+        context.ReportDiagnostic(
+            Diagnostic.Create(
+                Rule,
+                location,
+                type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)
+            )
+        );
+    }
+
+    private static void Report(
+        OperationAnalysisContext context,
+        Location location,
+        ITypeSymbol type
+    )
+    {
+        context.ReportDiagnostic(
+            Diagnostic.Create(
+                Rule,
+                location,
+                type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)
+            )
+        );
+    }
+
+    private static void ReportMathf(OperationAnalysisContext context, Location location)
+    {
+        context.ReportDiagnostic(Diagnostic.Create(MathfRule, location, "UnityEngine.Mathf"));
     }
 
     private static void AnalyzeField(SymbolAnalysisContext context)
@@ -147,8 +206,6 @@ public sealed class NoFloatDoubleInGameSimAnalyzer : DiagnosticAnalyzer
 
         var localDecl = (LocalDeclarationStatementSyntax)context.Node;
 
-        // Handles: float x = ...;  double y = ...;
-        // Handles: var x = 1f; (type inferred as float/double)
         foreach (var v in localDecl.Declaration.Variables)
         {
             var localSymbol =
@@ -159,15 +216,7 @@ public sealed class NoFloatDoubleInGameSimAnalyzer : DiagnosticAnalyzer
 
             var type = localSymbol.Type;
             if (IsBanned(type))
-            {
-                context.ReportDiagnostic(
-                    Diagnostic.Create(
-                        Rule,
-                        v.Identifier.GetLocation(),
-                        type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)
-                    )
-                );
-            }
+                Report(context, v.Identifier.GetLocation(), type);
         }
     }
 
@@ -183,17 +232,11 @@ public sealed class NoFloatDoubleInGameSimAnalyzer : DiagnosticAnalyzer
         if (!IsBanned(type))
             return;
 
-        // Allow float/double literals only if they are immediately cast to sfloat
+        // Keep this exemption only for literals (per your earlier behavior).
         if (IsImmediatelyCastedToSfloat(literal, context))
             return;
 
-        context.ReportDiagnostic(
-            Diagnostic.Create(
-                Rule,
-                literal.GetLocation(),
-                type!.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)
-            )
-        );
+        Report(context, literal.GetLocation(), type!);
     }
 
     private static void AnalyzeCastExpression(SyntaxNodeAnalysisContext context)
@@ -204,17 +247,69 @@ public sealed class NoFloatDoubleInGameSimAnalyzer : DiagnosticAnalyzer
 
         var cast = (CastExpressionSyntax)context.Node;
 
-        // Only ban casts *to* float/double
         var type = context.SemanticModel.GetTypeInfo(cast.Type, context.CancellationToken).Type;
         if (!IsBanned(type))
             return;
 
-        context.ReportDiagnostic(
-            Diagnostic.Create(
-                Rule,
-                cast.Type.GetLocation(),
-                type!.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)
-            )
-        );
+        Report(context, cast.Type.GetLocation(), type!);
+    }
+
+    // Single rule: ban any binary op where result/operands are float/double.
+    private static void AnalyzeBinaryOperation(OperationAnalysisContext context)
+    {
+        var bin = (IBinaryOperation)context.Operation;
+
+        if (!IsInTargetNamespace(context, bin.Syntax))
+            return;
+
+        if (
+            IsBanned(bin.Type)
+            || IsBanned(bin.LeftOperand?.Type)
+            || IsBanned(bin.RightOperand?.Type)
+        )
+        {
+            var t = bin.Type ?? bin.LeftOperand?.Type ?? bin.RightOperand?.Type;
+            if (t is null)
+                return;
+
+            Report(context, bin.Syntax.GetLocation(), t);
+        }
+    }
+
+    private static void AnalyzeCompoundAssignmentOperation(OperationAnalysisContext context)
+    {
+        var op = (ICompoundAssignmentOperation)context.Operation;
+
+        if (!IsInTargetNamespace(context, op.Syntax))
+            return;
+
+        if (IsBanned(op.Type) || IsBanned(op.Target?.Type) || IsBanned(op.Value?.Type))
+        {
+            var t = op.Type ?? op.Target?.Type ?? op.Value?.Type;
+            if (t is null)
+                return;
+
+            Report(context, op.Syntax.GetLocation(), t);
+        }
+    }
+
+    private static void AnalyzeInvocationOperation(OperationAnalysisContext context)
+    {
+        var inv = (IInvocationOperation)context.Operation;
+
+        if (!IsInTargetNamespace(context, inv.Syntax))
+            return;
+
+        var containingType = inv.TargetMethod.ContainingType;
+        if (containingType is null)
+            return;
+
+        if (
+            containingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)
+            == "global::UnityEngine.Mathf"
+        )
+        {
+            ReportMathf(context, inv.Syntax.GetLocation());
+        }
     }
 }

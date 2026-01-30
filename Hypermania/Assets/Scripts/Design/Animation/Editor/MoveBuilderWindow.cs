@@ -9,14 +9,13 @@ namespace Design.Animation.Editors
         [MenuItem("Tools/Hypermania/Move Builder")]
         public static void Open() => GetWindow<MoveBuilderWindow>("Move Builder");
 
-        [SerializeField]
         private MoveBuilderModel _model;
         private MoveBuilderControlsView _controls;
         private MoveBuilderPreviewView _preview;
 
         private void OnEnable()
         {
-            _model ??= new MoveBuilderModel();
+            _model = new MoveBuilderModel();
             _controls = new MoveBuilderControlsView();
             _preview = new MoveBuilderPreviewView();
 
@@ -103,6 +102,11 @@ namespace Design.Animation.Editors
             if (_model == null)
                 return;
 
+            // ensure things are valid
+            _model.SetTick(_model.CurrentTick);
+
+            _controls.DrawToolbar(_model);
+
             HandleGlobalKeyShortcuts(_model);
 
             using (new EditorGUILayout.HorizontalScope())
@@ -110,7 +114,7 @@ namespace Design.Animation.Editors
                 using (
                     new EditorGUILayout.VerticalScope(
                         new GUIStyle { padding = new RectOffset(8, 8, 8, 8) },
-                        GUILayout.Width(380)
+                        GUILayout.Width(320)
                     )
                 )
                 {
@@ -126,7 +130,13 @@ namespace Design.Animation.Editors
                         GUILayout.ExpandHeight(true)
                     );
 
-                    _preview.Draw(previewRect, _model, GameManager.TPS);
+                    GUI.BeginGroup(previewRect);
+                    {
+                        Rect localRect = new Rect(0, 0, previewRect.width, previewRect.height);
+                        _preview.Draw(localRect, _model, GameManager.TPS);
+                    }
+                    GUI.EndGroup();
+
                     _controls.DrawBottomTimelineLayout(_model, GameManager.TPS);
                 }
             }

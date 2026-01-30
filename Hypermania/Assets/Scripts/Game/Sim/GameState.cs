@@ -117,7 +117,19 @@ namespace Game.Sim
             // Push the current input into the input history, to read for buffering.
             for (int i = 0; i < Fighters.Length; i++)
             {
-                Fighters[i].InputH.PushInput(inputs[i].input);
+                if (GameMode == GameMode.Fighting)
+                {
+                    Fighters[i].InputH.PushInput(inputs[i].input);
+                }
+                else
+                {
+                    Fighters[i].InputH.PushInput(GameInput.None);
+                }
+            }
+
+            for (int i = 0; i < Fighters.Length; i++)
+            {
+                Fighters[i].DoFrameStart();
             }
 
             // Tick the state machine, making the character idle if an animation/stun finishes
@@ -126,41 +138,21 @@ namespace Game.Sim
                 Fighters[i].TickStateMachine(Frame);
             }
 
-            if (GameMode == GameMode.Fighting)
+            // This function internally appies changes to the fighter's velocity based on movement inputs
+            for (int i = 0; i < Fighters.Length; i++)
             {
-                for (int i = 0; i < Fighters.Length; i++)
-                {
-                    Fighters[i].DoFrameStart();
-                }
-                // This function internally appies changes to the fighter's velocity based on movement inputs
-                for (int i = 0; i < Fighters.Length; i++)
-                {
-                    Fighters[i].ApplyMovementIntent(Frame, characters[i], config);
-                }
-                // If a player applies inputs to start a state at the start of the frame, we should apply those immediately
-                for (int i = 0; i < Fighters.Length; i++)
-                {
-                    Fighters[i].ApplyActiveState(Frame, characters[i], config);
-                }
+                Fighters[i].ApplyMovementIntent(Frame, characters[i], config);
             }
-            else if (GameMode == GameMode.Mania)
-            {
-                for (int i = 0; i < Manias.Length; i++)
-                {
-                    List<ManiaEvent> maniaEvents = new List<ManiaEvent>();
-                    Manias[i].Tick(Frame, inputs[i].input, maniaEvents);
-                    // TODO: make note hits do something to the character here
 
-                    foreach (ManiaEvent ev in maniaEvents)
-                    {
-                        switch (ev.Kind)
-                        {
-                            case ManiaEventKind.End:
-                                GameMode = GameMode.Fighting;
-                                break;
-                        }
-                    }
-                }
+            // If a player applies inputs to start a state at the start of the frame, we should apply those immediately
+            for (int i = 0; i < Fighters.Length; i++)
+            {
+                Fighters[i].ApplyActiveState(Frame, characters[i], config);
+            }
+
+            if (GameMode == GameMode.Mania)
+            {
+                DoManiaStep(inputs);
             }
 
             DoCollisionStep(characters, config);
@@ -185,6 +177,26 @@ namespace Game.Sim
             for (int i = 0; i < Fighters.Length; i++)
             {
                 Fighters[i].ApplyMovementState(Frame, config);
+            }
+        }
+
+        private void DoManiaStep((GameInput input, InputStatus status)[] inputs)
+        {
+            for (int i = 0; i < Manias.Length; i++)
+            {
+                List<ManiaEvent> maniaEvents = new List<ManiaEvent>();
+                Manias[i].Tick(Frame, inputs[i].input, maniaEvents);
+                // TODO: make note hits do something to the character here
+
+                foreach (ManiaEvent ev in maniaEvents)
+                {
+                    switch (ev.Kind)
+                    {
+                        case ManiaEventKind.End:
+                            GameMode = GameMode.Fighting;
+                            break;
+                    }
+                }
             }
         }
 
@@ -246,10 +258,12 @@ namespace Game.Sim
                     //owners[0] hits owners[1]
                     HandleCollision(collision, config);
 
+                    var attackerBox = collision.BoxA.Owner == owners.Item1 ? collision.BoxA : collision.BoxB;
                     //to start a rhythm combo, we must sure that the move was not traded
                     if (
-                        collision.BoxA.Data.StartsRhythmCombo
+                        attackerBox.Data.StartsRhythmCombo
                         && !HurtHitCollisions.ContainsKey((owners.Item2, owners.Item1))
+                        && GameMode == GameMode.Fighting
                     )
                     {
                         // TODO: fix me, 30.72 is hardcoded ticks/beat
@@ -266,7 +280,6 @@ namespace Game.Sim
                                     i % 4,
                                     new ManiaNote
                                     {
-                                        Id = i,
                                         Length = 0,
                                         Tick = stFrame + Mathsf.RoundToInt(ticksPerBeat / 2 * i),
                                     }

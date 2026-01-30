@@ -101,7 +101,6 @@ namespace Game.View
             {
                 noteView = Instantiate(Config.Notes[channel]);
                 noteView.transform.SetParent(transform);
-                _activeNotes[note.Id] = noteView;
             }
             else
             {

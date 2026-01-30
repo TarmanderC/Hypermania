@@ -59,9 +59,9 @@ namespace Game.View
             float halfHeight = Camera.orthographicSize;
             float halfWidth = Camera.orthographicSize * Camera.aspect;
 
-            float minX = -Config.WallsX + halfWidth - Margin;
-            float maxX = Config.WallsX - halfWidth + Margin;
-            float minY = Config.GroundY + halfHeight - Margin;
+            float minX = (float)-Config.WallsX + halfWidth - Margin;
+            float maxX = (float)Config.WallsX - halfWidth + Margin;
+            float minY = (float)Config.GroundY + halfHeight - Margin;
             float maxY = float.PositiveInfinity;
 
             // Clamping Camera View

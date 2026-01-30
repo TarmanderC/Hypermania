@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace Utils.SoftFloat
 {
+    [Serializable]
     public struct SVector2 : IEquatable<SVector2>, IFormattable
     {
         public static readonly sfloat Epsilon = (sfloat)1E-5f;

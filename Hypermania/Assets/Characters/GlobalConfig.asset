@@ -12,9 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ed2fba05c893c2a759e505a3b0161b2f, type: 3}
   m_Name: GlobalConfig
   m_EditorClassIdentifier: 
-  Gravity: -20
-  GroundY: -3
-  WallsX: 12
+  Gravity:
+    rawValue: 3248488448
+  GroundY:
+    rawValue: 3225419776
+  WallsX:
+    rawValue: 1094713344
   ClankTicks: 30
   _configs:
   - {fileID: 11400000, guid: 1e6472018f0802edf8647882acc6eb72, type: 2}

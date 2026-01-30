@@ -4,6 +4,7 @@ using Game;
 using Game.View;
 using UnityEngine;
 using Utils.EnumArray;
+using Utils.SoftFloat;
 
 namespace Design
 {
@@ -13,9 +14,9 @@ namespace Design
         public Character Character;
         public FighterView Prefab;
         public AnimatorOverrideController AnimationController;
-        public float Speed;
-        public float JumpVelocity;
-        public float Health;
+        public sfloat Speed;
+        public sfloat JumpVelocity;
+        public sfloat Health;
         public EnumArray<CharacterState, HitboxData> Hitboxes;
 
         public FrameData GetFrameData(CharacterState anim, int tick)
