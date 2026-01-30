@@ -275,6 +275,7 @@ namespace Design.Animation.Editors
             Camera cam
         )
         {
+            EditorGUIUtility.AddCursorRect(guiRect, MouseCursor.MoveArrow);
             var e = Event.current;
             if (e == null)
                 return;
@@ -337,14 +338,14 @@ namespace Design.Animation.Editors
             Rect rSW = HandleRect(guiRect.xMin, guiRect.yMax, size);
 
             // Draw handles
-            DrawHandle(rN);
-            DrawHandle(rS);
-            DrawHandle(rE);
-            DrawHandle(rW);
-            DrawHandle(rNE);
-            DrawHandle(rNW);
-            DrawHandle(rSE);
-            DrawHandle(rSW);
+            DrawHandle(rN, ResizeHandle.N);
+            DrawHandle(rS, ResizeHandle.S);
+            DrawHandle(rE, ResizeHandle.E);
+            DrawHandle(rW, ResizeHandle.W);
+            DrawHandle(rNE, ResizeHandle.NE);
+            DrawHandle(rNW, ResizeHandle.NW);
+            DrawHandle(rSE, ResizeHandle.SE);
+            DrawHandle(rSW, ResizeHandle.SW);
 
             // Mouse down: pick active handle
             if (!_resizing && e.type == EventType.MouseDown && e.button == 0 && rect.Contains(e.mousePosition))
@@ -477,11 +478,30 @@ namespace Design.Animation.Editors
             return new Rect(x - size * 0.5f, y - size * 0.5f, size, size);
         }
 
-        private static void DrawHandle(Rect r)
+        private static void DrawHandle(Rect r, ResizeHandle resizeHandle)
         {
             // Small solid square. Keep simple; no special colors beyond default.
             EditorGUI.DrawRect(r, Color.white);
-            EditorGUIUtility.AddCursorRect(r, MouseCursor.MoveArrow);
+
+            switch (resizeHandle)
+            {
+                case ResizeHandle.E:
+                case ResizeHandle.W:
+                    EditorGUIUtility.AddCursorRect(r, MouseCursor.ResizeHorizontal);
+                    break;
+                case ResizeHandle.S:
+                case ResizeHandle.N:
+                    EditorGUIUtility.AddCursorRect(r, MouseCursor.ResizeVertical);
+                    break;
+                case ResizeHandle.NE:
+                case ResizeHandle.SW:
+                    EditorGUIUtility.AddCursorRect(r, MouseCursor.ResizeUpRight);
+                    break;
+                case ResizeHandle.NW:
+                case ResizeHandle.SE:
+                    EditorGUIUtility.AddCursorRect(r, MouseCursor.ResizeUpLeft);
+                    break;
+            }
         }
 
         private static float SafeAspect(Vector2 size)
