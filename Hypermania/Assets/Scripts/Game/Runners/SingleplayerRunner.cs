@@ -92,6 +92,12 @@ namespace Game.Runners
                 }
             }
 
+            if (_curState.FightersDead())
+            {
+                DeInit();
+                return;
+            }
+
             _view.Render(_curState, _config);
         }
     }

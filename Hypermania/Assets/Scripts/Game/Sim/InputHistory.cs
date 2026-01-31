@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using MemoryPack;
 
 namespace Game.Sim
@@ -27,6 +26,13 @@ namespace Game.Sim
         public InputHistory()
         {
             _buffer = new GameInput[64];
+            _next = 0;
+            _count = 0;
+        }
+
+        public void Clear()
+        {
+            Array.Clear(_buffer, 0, _buffer.Length);
             _next = 0;
             _count = 0;
         }

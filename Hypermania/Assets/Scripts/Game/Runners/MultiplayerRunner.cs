@@ -131,6 +131,12 @@ namespace Game.Runners
                 }
             }
 
+            if (_session.ConfirmedState().FightersDead())
+            {
+                DeInit();
+                return;
+            }
+
             _view.Render(_curState, _config);
         }
     }

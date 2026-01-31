@@ -103,18 +103,6 @@ namespace Game.View
                 Healthbars[i].SetHealth((int)state.Fighters[i].Health);
             }
 
-            // Debug testing for zoom, remove later
-            if (Input.GetKeyDown(KeyCode.P))
-            {
-                if (Zoom == 5f)
-                {
-                    Zoom = 4f;
-                }
-                else
-                {
-                    Zoom = 5f;
-                }
-            }
             CameraControl.UpdateCamera(interestPoints, Zoom, Time.deltaTime);
             FighterIndicatorManager.Track(_fighters);
 

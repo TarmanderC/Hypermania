@@ -396,6 +396,12 @@ namespace Netcode.Rollback.Sessions
             return confirmedFrame;
         }
 
+        public TState ConfirmedState()
+        {
+            _syncLayer.SavedStateByFrame(ConfirmedFrame()).Load(out var data);
+            return data;
+        }
+
         public Frame CurrentFrame => _syncLayer.CurrentFrame;
         public uint MaxPrediction => _maxPrediction;
         public bool InLockstepMode => _maxPrediction == 0;

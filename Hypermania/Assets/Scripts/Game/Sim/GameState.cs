@@ -16,6 +16,7 @@ namespace Game.Sim
     {
         Fighting,
         Mania,
+        Starting,
     }
 
     [MemoryPackable]
@@ -89,7 +90,7 @@ namespace Game.Sim
             {
                 sfloat xPos = i - ((sfloat)characters.Length - 1) / 2;
                 FighterFacing facing = xPos > 0 ? FighterFacing.Left : FighterFacing.Right;
-                state.Fighters[i] = FighterState.Create(new SVector2(xPos, sfloat.Zero), facing, characters[i]);
+                state.Fighters[i] = FighterState.Create(new SVector2(xPos, sfloat.Zero), facing, characters[i], 3);
                 state.Manias[i] = ManiaState.Create(
                     new ManiaConfig
                     {
@@ -113,6 +114,19 @@ namespace Game.Sim
                 throw new InvalidOperationException("invalid inputs and characters to advance game state with");
             }
             Frame += 1;
+
+            // Reset positions and state for a new round.
+            if (GameMode == GameMode.Starting)
+            {
+                for (int i = 0; i < Fighters.Length; i++)
+                {
+                    Fighters[i].Health = characters[i].Health;
+                    sfloat xPos = i - ((sfloat)characters.Length - 1) / 2;
+                    FighterFacing facing = xPos > 0 ? FighterFacing.Left : FighterFacing.Right;
+                    Fighters[i].RoundReset(new SVector2(xPos, sfloat.Zero), facing, characters[i]);
+                }
+                GameMode = GameMode.Fighting;
+            }
 
             // Push the current input into the input history, to read for buffering.
             for (int i = 0; i < Fighters.Length; i++)
@@ -157,6 +171,15 @@ namespace Game.Sim
 
             DoCollisionStep(characters, config);
 
+            for (int i = 0; i < Fighters.Length; i++)
+            {
+                if (Fighters[i].Health <= 0)
+                {
+                    GameMode = GameMode.Starting;
+                    return;
+                }
+            }
+
             // Apply any velocities set during movement or through knockback.
             for (int i = 0; i < Fighters.Length; i++)
             {
@@ -178,6 +201,18 @@ namespace Game.Sim
             {
                 Fighters[i].ApplyMovementState(Frame, config);
             }
+        }
+
+        public bool FightersDead()
+        {
+            for (int i = 0; i < Fighters.Length; i++)
+            {
+                if (Fighters[i].Lives <= 0)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         private void DoManiaStep((GameInput input, InputStatus status)[] inputs)
