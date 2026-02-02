@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Design;
 using Game.Sim;
+using Game.View;
 using Netcode.P2P;
 using Netcode.Rollback;
 using Netcode.Rollback.Sessions;
@@ -16,6 +17,7 @@ namespace Game.Runners
 
         private uint _waitRemaining;
         private PlayerHandle _myHandle;
+        private PlayerHandle _remoteHandle;
 
         public override void Init(
             List<(PlayerHandle playerHandle, PlayerKind playerKind, SteamNetworkingIdentity address)> players,
@@ -36,6 +38,11 @@ namespace Game.Runners
                 {
                     _myHandle = playerHandle;
                 }
+                else if (playerKind == PlayerKind.Remote)
+                {
+                    // assume only two people for now
+                    _remoteHandle = playerHandle;
+                }
                 builder.AddPlayer(
                     new PlayerType<SteamNetworkingIdentity> { Kind = playerKind, Address = address },
                     playerHandle
@@ -44,9 +51,9 @@ namespace Game.Runners
             _session = builder.StartP2PSession<GameState>(client);
             _waitRemaining = 0;
 
-            if (_myHandle.Id == -1)
+            if (_myHandle.Id == -1 || _remoteHandle.Id == -1)
             {
-                throw new InvalidOperationException("No local players in multiplayer runner");
+                throw new InvalidOperationException("Players not found in multiplayer runner");
             }
         }
 
@@ -137,8 +144,12 @@ namespace Game.Runners
                 DeInit();
                 return;
             }
-
-            _view.Render(_curState, _config);
+            InfoOverlayDetails details = new InfoOverlayDetails
+            {
+                HasPing = true,
+                Ping = _session.NetworkStats(_remoteHandle).Ping,
+            };
+            _view.Render(_curState, _config, details);
         }
     }
 }

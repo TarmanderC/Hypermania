@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Design;
 using Game.Sim;
+using Game.View;
 using Netcode.P2P;
 using Netcode.Rollback;
 using Netcode.Rollback.Sessions;
@@ -98,8 +99,8 @@ namespace Game.Runners
                 DeInit();
                 return;
             }
-
-            _view.Render(_curState, _config);
+            InfoOverlayDetails details = new InfoOverlayDetails { HasPing = false, Ping = 0 };
+            _view.Render(_curState, _config, details);
         }
     }
 }
