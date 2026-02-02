@@ -31,7 +31,7 @@ namespace Game.Runners
                 SteamNetworkingIdentity
             >()
                 .WithNumPlayers(players.Count)
-                .WithFps(64);
+                .WithFps(GameManager.TPS);
             foreach ((PlayerHandle playerHandle, PlayerKind playerKind, SteamNetworkingIdentity address) in players)
             {
                 if (playerKind == PlayerKind.Local)
