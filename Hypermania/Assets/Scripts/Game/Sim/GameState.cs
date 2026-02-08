@@ -7,6 +7,7 @@ using Design.Animation;
 using MemoryPack;
 using Netcode.Rollback;
 using UnityEngine;
+using UnityEngine.UIElements;
 using Utils;
 using Utils.SoftFloat;
 
@@ -41,6 +42,7 @@ namespace Game.Sim
         public const int MAX_COLLIDERS = 100;
 
         public Frame Frame;
+        public Frame RoundEnd;
         public FighterState[] Fighters;
         public ManiaState[] Manias;
         public GameMode GameMode;
@@ -56,6 +58,7 @@ namespace Game.Sim
         {
             GameState state = new GameState();
             state.Frame = Frame.FirstFrame;
+            state.RoundEnd = new Frame(10800);
             state.Fighters = new FighterState[characters.Length];
             state.Manias = new ManiaState[characters.Length];
             state.GameMode = GameMode.Fighting;
@@ -143,6 +146,20 @@ namespace Game.Sim
             }
 
             DoCollisionStep(characters, config);
+
+            if (Frame == RoundEnd)
+            {
+                RoundEnd = Frame + 10800;
+                //TODO: Properly handle edge case where player health is equal. Currently player 1 wins by default.
+                if (Fighters[0].Health < Fighters[1].Health)
+                {
+                    Fighters[0].Health = 0;
+                }
+                else
+                {
+                    Fighters[1].Health = 0;
+                }
+            }
 
             for (int i = 0; i < Fighters.Length; i++)
             {

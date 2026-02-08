@@ -39,6 +39,9 @@ namespace Game.View
         [SerializeField]
         private InfoOverlayView _overlayView;
 
+        [SerializeField]
+        private RoundTimerView _roundTimerView;
+
         public void OnValidate()
         {
             if (_healthbars == null)
@@ -124,6 +127,7 @@ namespace Game.View
                 _comboViews[i].SetComboCount(combo);
             }
             _overlayView.Render(overlayDetails);
+            _roundTimerView.DisplayRoundTimer(state.Frame, state.RoundEnd);
         }
 
         public void DeInit()
