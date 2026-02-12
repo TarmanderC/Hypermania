@@ -16,6 +16,8 @@ namespace Design
         [SerializeField]
         private AudioConfig AudioConfig;
 
+        public AudioConfig Audio => AudioConfig;
+
         [SerializeField]
         private List<CharacterConfig> _configs;
 
